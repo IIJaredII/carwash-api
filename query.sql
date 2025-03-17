@@ -142,7 +142,7 @@ CREATE TABLE Carros (
   ID INT AUTO_INCREMENT,
   ID_Cliente INT,
   Placa VARCHAR(20),
-  Modelo VARCHAR(100),
+  Modelo INT,
   Año YEAR,
   PRIMARY KEY (ID),
   FOREIGN KEY (ID_Cliente) REFERENCES Clientes(ID),
@@ -158,3 +158,70 @@ CREATE TABLE Tarjetas (
   FechaActualizacion DATE,
   PRIMARY KEY (ID)
 );
+
+/*Procedimientos almacenados*/
+DELIMITER $$
+
+CREATE PROCEDURE insertarCliente(
+    IN p_nombre VARCHAR(255),
+    IN p_correo VARCHAR(255),
+    IN p_telefono VARCHAR(255),
+    IN p_contrasena VARCHAR(255),
+    IN p_foto VARCHAR(255)
+)
+BEGIN
+    INSERT INTO Clientes (Nombre, Correo, Telefono, Contraseña, URL_FOTO, Estado, Fecha_Creacion, Fecha_Modificacion)
+    VALUES (p_nombre, p_correo, p_telefono, p_contrasena, p_foto, 1, NOW(), null);
+END $$
+
+CREATE PROCEDURE actualizarCliente(
+    IN p_id INT,
+    IN p_nombre VARCHAR(255),
+    IN p_correo VARCHAR(255),
+    IN p_telefono VARCHAR(255),
+    IN p_contrasena VARCHAR(255),
+    IN p_foto VARCHAR(255)
+)
+BEGIN
+    UPDATE Clientes 
+    SET Nombre = p_nombre,
+        Correo = p_correo,
+        Telefono = p_telefono,
+        Contraseña = p_contrasena,
+        URL_FOTO = p_foto,
+        Fecha_Modificacion = NOW()
+    WHERE ID = p_id;
+END $$
+
+CREATE PROCEDURE eliminarCliente(
+    IN p_id INT
+)
+BEGIN
+    UPDATE Clientes 
+    SET Estado = 0, Fecha_Modificacion = NOW()
+    WHERE ID = p_id;
+END $$
+
+CREATE PROCEDURE obtenerClientes()
+BEGIN
+    SELECT ID, Nombre, Correo, Telefono, URL_FOTO, Estado, Fecha_Creacion, Fecha_Modificacion
+    FROM Clientes
+    WHERE Estado = 1;
+END $$
+
+CREATE PROCEDURE obtenerClientePorID(
+    IN p_id INT
+)
+BEGIN
+    SELECT ID, Nombre, Correo, Telefono, URL_FOTO, Estado, Fecha_Creacion, Fecha_Modificacion
+    FROM Clientes
+    WHERE ID = p_id AND Estado = 1;
+END $$
+
+DELIMITER ;
+
+
+
+/*Triggers*/
+
+/*Vistas*/
