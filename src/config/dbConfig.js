@@ -30,15 +30,6 @@ const CLIENTE_COLUMNS = {
     FECHA_MODIFICACION: "Fecha_Modificacion"
 };
 
-const NEW_CLIENTE_COLUMNS = {
-    NOMBRE: "Nombre",
-    CORREO: "Correo",
-    TELEFONO: "Telefono",
-    CONTRASEÑA: "Contraseña",
-    FOTO: "URL_FOTO"
-};
-
-
 const MARCA_COLUMNS = {
     ID: "ID",
     NOMBRE: "Nombre"
@@ -170,5 +161,4 @@ module.exports = {
     TARJETAS_COLUMNS,
     ROL_COLUMNS,
     REFERENCIA_TARJETA_COLUMNS,
-    NEW_CLIENTE_COLUMNS
 };

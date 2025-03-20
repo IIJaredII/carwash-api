@@ -69,11 +69,12 @@ CREATE TABLE Factura (
   FOREIGN KEY (ID_Tarjeta) REFERENCES Referencia_a_la_tarjeta(ID)
 );
 
-CREATE TABLE Empleado (
+CREATE TABLE Usuarios (
   ID INT AUTO_INCREMENT,
   Nombre VARCHAR(100),
   Correo VARCHAR(150),
   Telefono VARCHAR(20),
+  Contraseña VARCHAR(255),
   Direccion VARCHAR(255),
   ID_Rol INT,
   Foto_empleado VARCHAR(255),
@@ -207,6 +208,15 @@ BEGIN
     SELECT ID, Nombre, Correo, Telefono, URL_FOTO, Estado, Fecha_Creacion, Fecha_Modificacion
     FROM Clientes
     WHERE Estado = 1;
+END $$
+
+CREATE PROCEDURE loginClientes(
+  IN p_correo VARCHAR(255)
+)
+BEGIN
+    SELECT ID, Nombre,Contraseña
+    FROM Clientes
+    WHERE p_correo = Correo AND Estado = 1;
 END $$
 
 CREATE PROCEDURE obtenerClientePorID(

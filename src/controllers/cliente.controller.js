@@ -64,8 +64,6 @@ const actualizarCliente = async (req, res) => {
 
         const imagenActual = cliente[0].URL_FOTO;
 
-        console.log("URL de la imagen: "+imagenActual);
-
         // Si hay una imagen nueva y había una anterior, eliminar la anterior
         if (nuevaFoto && imagenActual) {
             if (fs.existsSync(imagenActual)) {
@@ -103,8 +101,6 @@ const obtenerClientes = async (req, res) => {
     try {
         const [results] = await connection.promise().query('CALL obtenerClientes()');
 
-        console.log(results[0]);
-
         res.json(results[0]); 
     } catch (error) {
         console.error("Error al obtener clientes:", error);
@@ -121,7 +117,7 @@ const obtenerClientePorID = async (req, res) => {
             return res.status(404).json({ mensaje: "Cliente no encontrado" });
         }
 
-        res.json(results[0]); // Retorna solo el primer cliente
+        res.json(results[0]);
     } catch (error) {
         console.error("Error al obtener cliente por ID:", error);
         res.status(500).json({ mensaje: "Error al obtener cliente" });
