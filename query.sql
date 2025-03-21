@@ -273,23 +273,24 @@ DELIMITER $$
 
 CREATE PROCEDURE insertarRol(
     IN p_nombre VARCHAR(255),
-    IN p_descricion VARCHAR(255),
+    IN p_descripcion VARCHAR(255)
     
 )
 BEGIN
-    INSERT INTO Clientes (Nombre, Descripcion,  Estado, Fecha_Creacion, Fecha_Modificacion)
-    VALUES (p_nombre, p_descricion, 1, NOW(), null);
+    INSERT INTO Rol (Nombre, Descripcion,  Estado, Fecha_Creacion, Fecha_Modificacion)
+    VALUES (p_nombre, p_descripcion, 1, NOW(), null);
 END $$
 
 CREATE PROCEDURE actualizarRol(
     IN p_id INT,
-    IN p_descricion VARCHAR(255),
+    IN p_nombre VARCHAR(255),
+    IN p_descripcion VARCHAR(255)
    
 )
 BEGIN
     UPDATE Rol 
-    SET Nombre = p_nobre,
-        Descripcion = p_descricion,
+    SET Nombre = p_nombre,
+        Descripcion = p_descripcion,
         Fecha_Modificacion = NOW()
     WHERE ID = p_id;
 END $$
@@ -310,9 +311,6 @@ BEGIN
     WHERE Estado = 1;
 END $$
 
-CREATE PROCEDURE loginClientes(
-  IN p_correo VARCHAR(255)
-)
 
 CREATE PROCEDURE obtenerRolPorID(
     IN p_id INT
@@ -338,8 +336,8 @@ CREATE PROCEDURE insertarEmpleado(
     IN p_foto VARCHAR(255)
 )
 BEGIN
-    INSERT INTO Empleado (Nombre, Correo, Telefono, Contraseña,Direccion,ID_Rol, URL_FOTO, Estado, Fecha_Creacion, Fecha_Modificacion)
-    VALUES (p_nombre, p_correo, p_telefono, p_contrasena,p_descricion,p_rol, p_foto, 1, NOW(), null);
+    INSERT INTO Empleado (Nombre, Correo, Telefono, Contraseña,Direccion,ID_Rol, Foto_empleado, Estado, Fecha_Creacion, Fecha_Modificacion)
+    VALUES (p_nombre, p_correo, p_telefono, p_contrasena,p_direccion,p_rol, p_foto, 1, NOW(), null);
 END $$
 
 CREATE PROCEDURE actualizarEmpleado(
@@ -358,9 +356,9 @@ BEGIN
         Correo = p_correo,
         Telefono = p_telefono,
         Contraseña = p_contrasena,
-        Direccion = p_descricion,
+        Direccion = p_direccion,
         ID_Rol = p_rol,
-        URL_FOTO = p_foto,
+        Foto_empleado = p_foto,
         Fecha_Modificacion = NOW()
     WHERE ID = p_id;
 END $$
@@ -376,7 +374,7 @@ END $$
 
 CREATE PROCEDURE obtenerEmpleado()
 BEGIN
-    SELECT ID, Nombre, Correo, Telefono,Direccion,ID_Rol, URL_FOTO, Estado, Fecha_Creacion, Fecha_Modificacion
+    SELECT ID, Nombre, Correo, Telefono,Direccion,ID_Rol, Foto_empleado, Estado, Fecha_Creacion, Fecha_Modificacion
     FROM Empleado
     WHERE Estado = 1;
 END $$
@@ -394,7 +392,7 @@ CREATE PROCEDURE obtenerEmpleadoPorID(
     IN p_id INT
 )
 BEGIN
-    SELECT ID, Nombre, Correo, Telefono,Direccion,ID_Rol URL_FOTO, Estado, Fecha_Creacion, Fecha_Modificacion
+    SELECT ID, Nombre, Correo, Telefono,Direccion,ID_Rol , Foto_empleado, Estado, Fecha_Creacion, Fecha_Modificacion
     FROM Empleado
     WHERE ID = p_id AND Estado = 1;
 END $$
