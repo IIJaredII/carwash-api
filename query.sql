@@ -72,7 +72,7 @@ CREATE TABLE Referencia_a_la_tarjeta (
 
 CREATE TABLE Factura (
   ID INT AUTO_INCREMENT,
-  ID_contizacion INT,
+  ID_cotizacion INT,
   Total DOUBLE,
   Metodo_pago INT,
   ID_Tarjeta INT,
@@ -80,7 +80,7 @@ CREATE TABLE Factura (
   FechaCreacion DATE,
   FechaActualizacion DATE,
   PRIMARY KEY (ID),
-  FOREIGN KEY (ID_contizacion) REFERENCES Cotizaciones(ID),
+  FOREIGN KEY (ID_cotizacion) REFERENCES Cotizaciones(ID),
   FOREIGN KEY (ID_Tarjeta) REFERENCES Referencia_a_la_tarjeta(ID)
 );
 
@@ -149,7 +149,8 @@ CREATE TABLE TrabajoEmpleado (
 CREATE TABLE Evidencias (
   ID INT AUTO_INCREMENT,
   ID_Trabajos INT,
-  URL_FOTO VARCHAR(255),
+  URL_Multimedia VARCHAR(255),
+  Observacion VARCHAR(255),
   Estado INT,
   Fecha_Creacion DATE,
   Fecha_Modificacion DATE,
@@ -161,8 +162,9 @@ CREATE TABLE Ubicaciones (
   ID INT AUTO_INCREMENT,
   ID_Cliente INT,
   Nombre VARCHAR(100),
-  Referecencia VARCHAR(255),
-  Ubicacion VARCHAR(255),
+  Referencia VARCHAR(255),
+  Longitud DOUBLE,
+  Latitud DOUBLE,
   Estado INT,
   Fecha_Creacion DATE,
   Fecha_Modificacion DATE,
@@ -306,7 +308,7 @@ END $$
 
 CREATE PROCEDURE obtenerRol()
 BEGIN
-    SELECT ID, Nombre, Descripcion, Estado, Fecha_Creacion, Fecha_Modificacion
+    SELECT ID, Nombre, Descripcion
     FROM Rol
     WHERE Estado = 1;
 END $$
@@ -316,7 +318,7 @@ CREATE PROCEDURE obtenerRolPorID(
     IN p_id INT
 )
 BEGIN
-    SELECT ID, Nombre, Descripcion, Estado, Fecha_Creacion, Fecha_Modificacion
+    SELECT ID, Nombre, Descripcion
     FROM Rol
     WHERE ID = p_id AND Estado = 1;
 END $$
@@ -383,9 +385,9 @@ CREATE PROCEDURE loginEmpleado(
   IN p_correo VARCHAR(255)
 )
 BEGIN
-    SELECT ID, Nombre,Contraseña
-    FROM Empleado
-    WHERE p_correo = Correo AND Estado = 1;
+    SELECT e.ID, e.Nombre, e.Contraseña, e.ID_Rol AS Rol
+    FROM empleado e
+    WHERE e.Correo = p_correo AND e.Estado = 1;
 END $$
 
 CREATE PROCEDURE obtenerEmpleadoPorID(
@@ -400,11 +402,78 @@ END $$
 DELIMITER ;
 
 
+-- Llenar la tabla de Marcas utilizados en Honduras
+INSERT INTO Marca (Nombre, Estado, Fecha_Creacion, Fecha_Modificacion) VALUES
+('Toyota', 1, CURDATE(), CURDATE()),
+('Nissan', 1, CURDATE(), CURDATE()),
+('Honda', 1, CURDATE(), CURDATE()),
+('Hyundai', 1, CURDATE(), CURDATE()),
+('Kia', 1, CURDATE(), CURDATE()),
+('Ford', 1, CURDATE(), CURDATE()),
+('Chevrolet', 1, CURDATE(), CURDATE()),
+('Mazda', 1, CURDATE(), CURDATE()),
+('Volkswagen', 1, CURDATE(), CURDATE()),
+('Mitsubishi', 1, CURDATE(), CURDATE()),
+('Suzuki', 1, CURDATE(), CURDATE()),
+('Isuzu', 1, CURDATE(), CURDATE()),
+('Jeep', 1, CURDATE(), CURDATE()),
+('Dodge', 1, CURDATE(), CURDATE()),
+('RAM', 1, CURDATE(), CURDATE()),
+('Subaru', 1, CURDATE(), CURDATE()),
+('Peugeot', 1, CURDATE(), CURDATE()),
+('Renault', 1, CURDATE(), CURDATE()),
+('Fiat', 1, CURDATE(), CURDATE()),
+('Changan', 1, CURDATE(), CURDATE()),
+('Chery', 1, CURDATE(), CURDATE()),
+('Great Wall', 1, CURDATE(), CURDATE()),
+('Geely', 1, CURDATE(), CURDATE()),
+('BYD', 1, CURDATE(), CURDATE()),
+('JAC', 1, CURDATE(), CURDATE()),
+('MG', 1, CURDATE(), CURDATE()),
+('Lexus', 1, CURDATE(), CURDATE()),
+('Acura', 1, CURDATE(), CURDATE()),
+('Mercedes-Benz', 1, CURDATE(), CURDATE()),
+('BMW', 1, CURDATE(), CURDATE()),
+('Audi', 1, CURDATE(), CURDATE()),
+('Volvo', 1, CURDATE(), CURDATE()),
+('Land Rover', 1, CURDATE(), CURDATE()),
+('Jaguar', 1, CURDATE(), CURDATE()),
+('Porsche', 1, CURDATE(), CURDATE()),
+('Tesla', 1, CURDATE(), CURDATE()),
+('Infiniti', 1, CURDATE(), CURDATE()),
+('Cadillac', 1, CURDATE(), CURDATE()),
+('Buick', 1, CURDATE(), CURDATE()),
+('Lincoln', 1, CURDATE(), CURDATE()),
+('GMC', 1, CURDATE(), CURDATE()),
+('SsangYong', 1, CURDATE(), CURDATE());
 
-
-
-
-
+-- Llenar la tabla de modelos utilizados en Honduras
+INSERT INTO Modelo (ID_Marca, Modelo, Estado, Fecha_Creacion, Fecha_Modificacion) VALUES
+(1, 'Corolla', 1, CURDATE(), CURDATE()),
+(1, 'Hilux', 1, CURDATE(), CURDATE()),
+(1, 'Rav4', 1, CURDATE(), CURDATE()),
+(2, 'Sentra', 1, CURDATE(), CURDATE()),
+(2, 'Frontier', 1, CURDATE(), CURDATE()),
+(2, 'Versa', 1, CURDATE(), CURDATE()),
+(3, 'Civic', 1, CURDATE(), CURDATE()),
+(3, 'CR-V', 1, CURDATE(), CURDATE()),
+(3, 'Accord', 1, CURDATE(), CURDATE()),
+(4, 'Tucson', 1, CURDATE(), CURDATE()),
+(4, 'Santa Fe', 1, CURDATE(), CURDATE()),
+(5, 'Sportage', 1, CURDATE(), CURDATE()),
+(5, 'Sorento', 1, CURDATE(), CURDATE()),
+(6, 'Silverado', 1, CURDATE(), CURDATE()),
+(6, 'Equinox', 1, CURDATE(), CURDATE()),
+(7, 'Ranger', 1, CURDATE(), CURDATE()),
+(7, 'Escape', 1, CURDATE(), CURDATE()),
+(8, 'CX-5', 1, CURDATE(), CURDATE()),
+(8, 'Mazda 3', 1, CURDATE(), CURDATE()),
+(9, 'Lancer', 1, CURDATE(), CURDATE()),
+(9, 'Outlander', 1, CURDATE(), CURDATE()),
+(10, 'Jetta', 1, CURDATE(), CURDATE()),
+(10, 'Tiguan', 1, CURDATE(), CURDATE()),
+(11, 'Swift', 1, CURDATE(), CURDATE()),
+(12, 'Wrangler', 1, CURDATE(), CURDATE());
 
 /*Triggers*/
 
