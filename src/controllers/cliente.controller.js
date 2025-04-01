@@ -1,13 +1,53 @@
 const fs = require("fs");
 const connection = require("../config/db");
+const email = require("../config/email");
+
+const verificarCorreo = async (req, res) => {
+    const {correo} = req.body;
+    try {
+
+        if (!correo) {
+            return res.status(400).json({ mensaje: "Correo no recibido" });
+        }
+        const [cliente] = await connection.promise().query(
+            "SELECT id FROM clientes WHERE correo = ?",
+            [correo]
+        );
+
+        if (cliente.length > 0) {
+            return res.status(409).json({ mensaje: "El cliente ya está registrado" });
+        }
+
+        const codigoVerificacion = Math.floor(100000 + Math.random() * 900000);
+        const mensajeTexto = `Hola,
+
+        Hemos recibido una solicitud para crear una cuenta en Carwash El Catracho con este correo.
+
+        Tu código de verificación es: ${codigoVerificacion}
+
+        Si no realizaste esta solicitud, puedes ignorar este mensaje.`;
+
+        email.enviarCorreo(
+            correo,
+            "Código de verificación para tu cuenta en Carwash El Catracho",
+            mensajeTexto,
+            null
+        )
+        return res.status(200).json({ codigo: codigoVerificacion });
+
+    } catch (error) {
+        
+    }
+
+}
 
 const insertarCliente = async (req, res) => {
     try {
         const { nombre, correo, telefono, contrasena } = req.body;
-        const foto = req.file ? req.file.path.replace(/\\/g, "/") : null; // Normalizamos la ruta
+        const foto = req.file ? req.file.path.replace(/\\/g, "/") : null;
 
         if (!nombre || !correo || !telefono || !contrasena) {
-            if (foto) fs.unlinkSync(foto);//Elimina la forto
+            if (foto) fs.unlinkSync(foto);
             return res.status(400).json({ mensaje: "Todos los campos son obligatorios, excepto la foto" });
         }
 
@@ -18,7 +58,7 @@ const insertarCliente = async (req, res) => {
 
         if (cliente.length > 0) {
             if (foto) fs.unlinkSync(foto);
-            return res.status(409).json({ mensaje: "El cliente ya está registrado" }); // 409: Conflicto
+            return res.status(409).json({ mensaje: "El cliente ya está registrado" });
         }
        
         const [results] = await connection.promise().query(
@@ -125,6 +165,7 @@ const obtenerClientePorID = async (req, res) => {
 };
 
 module.exports = {
+    verificarCorreo,
     insertarCliente,
     actualizarCliente,
     eliminarCliente,
