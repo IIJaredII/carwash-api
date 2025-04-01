@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
 const enviarCorreo = async (to, subject, text, html) => {
   try {
     const info = await transporter.sendMail({
-      from: '"Al parecer funciona :D" <elcatrachocarwash@gmail.com>',
+      from: '"Carwash El Catracho" <elcatrachocarwash@gmail.com>',
       to,
       subject,
       text,
