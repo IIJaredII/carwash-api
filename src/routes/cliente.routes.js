@@ -4,6 +4,7 @@ const clienteController = require("../controllers/cliente.controller");
 const upload = require("../middlewares/multerConfig");
 const {verifyToken,checkRole} = require("../middlewares/authConfig");
 
+router.post("/verificar",clienteController.verificarCorreo);
 router.post("/", upload.single("foto"), clienteController.insertarCliente);
 router.put("/:id", upload.single("foto"), clienteController.actualizarCliente);
 router.delete("/:id", clienteController.eliminarCliente);
