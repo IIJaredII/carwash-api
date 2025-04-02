@@ -5,7 +5,7 @@ let data = [];
 
 document.addEventListener("DOMContentLoaded", async () => {
     verificarAccesoYRedirigir();
-    obtenerRoles();
+    obtenerServicios();
     cambiarFormulario(1); 
 });
 
@@ -23,7 +23,7 @@ async function verificarAccesoYRedirigir() {
     }
 }
 
-const obtenerRoles = async () => {
+const obtenerServicios = async () => {
     try {
         const opc = document.getElementById('opcion').value;
         const dato = document.getElementById('dato').value;
@@ -31,11 +31,11 @@ const obtenerRoles = async () => {
 
         switch (parseInt(opc)) {
             case 0:
-                ruta=url+"roles/";
+                ruta=url+"servicios/";
                 document.getElementById('dato').value="";
             break;
             case 1:
-                ruta=url+"roles/"+dato;
+                ruta=url+"servicios/"+dato;
             break;
         }
             
@@ -52,22 +52,22 @@ const obtenerRoles = async () => {
             return;
         }
         data = await response.json();
-        const listaCategoria = document.getElementById('listarCategorias');
-        listaCategoria.innerHTML = '';
+        const listaServicios = document.getElementById('listarServicios');
+        listaServicios.innerHTML = '';
 
-        data.forEach((rol,index) => {
+        data.forEach((servicio,index) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <th>${rol.ID}</th>
-                <th>${rol.Nombre}</th>
-                <th>${rol.Descripcion}</th>
+                <th>${servicio.ID}</th>
+                <th>${servicio.Descripcion}</th>
+                <th>${servicio.Precio}</th>
                 <th>
-                    <button class="btn" onclick="editarCategoria(${index})">Editar</button>
-                    <button class="btn" onclick="verRol(${index})">Ver</button>
-                    <button class="btn" onclick="eliminarCategoria(${rol.ID})">borrar</button>
+                    <button class="btn" onclick="editarServicio(${index})">Editar</button>
+                    <button class="btn" onclick="verServicio(${index})">Ver</button>
+                    <button class="btn" onclick="eliminarServicio(${servicio.ID})">borrar</button>
                 </th>
             `;
-            listaCategoria.appendChild(tr);
+            listaServicios.appendChild(tr);
         });
 
     } catch (error) {
@@ -77,109 +77,96 @@ const obtenerRoles = async () => {
 
 
 
-function editarRol(index) {
-    const rol = data[index];
-    cambiarFormulario(2, rol);
+function editarServicio(index) {
+    const servicio = data[index];
+    cambiarFormulario(2, servicio);
 };
 
-function verRol(index) {
-    const rol = data[index];
-    cambiarFormulario(3, rol);
+function verServicio(index) {
+    const servicio = data[index];
+    cambiarFormulario(3, servicio);
 }
 
 
-const eliminarRol = async (id) => {
-    await fetch(url+`roles/${id}`, {
+const eliminarServicio = async (id) => {
+    await fetch(url+`servicios/${id}`, {
         headers: {
             "Authorization": `Bearer ${token}`
         },
         method: 'DELETE'
     });
-    obtenerRoles();
+    obtenerServicios();
 };
 
-const cambiarFormulario = (opc, rol) => {
+const cambiarFormulario = (opc, servicio) => {
     const formulario = document.getElementById('Formulario');
     if (opc === 1) {
         formulario.innerHTML = `
-            <h2>Registrar nueva categoría</h2>
+            <h2>Registrar nuevo servicio</h2>
             <form id="Formulario-agregar">
                 <div class="mb-3">
-                    <label for="nombre" class="form-label">Nombre del rol</label>
+                    <label for="nombre" class="form-label">Nombre del servicio</label>
                     <input type="text" class="form-control" id="nombre" placeholder="Nombre de la categoría">
                 </div>
                 <div class="mb-3">
-                    <label for="descripcion" class="form-label">Descripción</label>
-                    <textarea class="form-control" id="descripcion" rows="3" placeholder=""></textarea>
+                    <label for="precio" class="form-label">Precio</label>
+                    <textarea class="form-control" id="precio" rows="3" placeholder=""></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary">Agregar</button>
             </form>
         `;
-        document.getElementById('descripcion').addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-            }
-        });
 
         document.getElementById('Formulario-agregar').addEventListener('submit', async (event) => {
             event.preventDefault();
             const nombre = document.getElementById('nombre').value;
-            const descripcion = document.getElementById('descripcion').value;
+            const precio = document.getElementById('precio').value;
 
-            console.log(nombre);
-            console.log(descripcion);
-
-            const response = await fetch(url+'roles/', {
+            const response = await fetch(url+'servicios/', {
                 method: 'POST',
                 headers: {
                     "Authorization": `Bearer ${token}`,
                     "Content-Type": "application/json"  // Asegura que el servidor reciba JSON
                 },
-                body: JSON.stringify({ nombre, descripcion })
+                body: JSON.stringify({ nombre, precio })
             });
 
             if (!response.ok) {
-                console.error('Error al agregar un rol');
+                console.error('Error al agregar un servicio');
                 return;
             }
 
             event.target.reset();
-            obtenerRoles();
+            obtenerServicios();
         });
     } else if (opc === 2) {
         formulario.innerHTML = `
             <h2>Editar rol</h2>
             <form id="Formulario-editar">
                 <div class="mb-3">
-                    <label for="nombre" class="form-label">Nombre del rol</label>
-                    <input type="text" class="form-control" id="nombre" value="${rol.Nombre}" placeholder="Nombre de la categoría">
+                    <label for="nombre" class="form-label">Nombre del servicio</label>
+                    <input type="text" class="form-control" id="nombre" value="${servicio.Descripcion}" placeholder="Nombre de la categoría">
                 </div>
                 <div class="mb-3">
-                    <label for="descripcion" class="form-label">Descripción</label>
-                    <textarea class="form-control" id="descripcion" rows="3" placeholder="">${rol.Descripcion}</textarea>
+                    <label for="precio" class="form-label">Precio</label>
+                    <textarea class="form-control" id="precio" rows="3" placeholder="">${servicio.Precio}</textarea>
                 </div>
                 <button type="submit" class="btn btn-primary">Editar</button>
                 <button type="button" class="btn btn-secondary" onclick="cambiarFormulario(1)">Cancelar</button>
             </form>
         `;
         
-        document.getElementById('descripcion').addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-            }
-        });
         document.getElementById('Formulario-editar').addEventListener('submit', async (event) => {
             event.preventDefault();
             const nombre = document.getElementById('nombre').value;
-            const descripcion = document.getElementById('descripcion').value;
+            const precio = document.getElementById('precio').value;
 
-            const response = await fetch(url+`roles/${rol.ID}`, {
+            const response = await fetch(url+`servicios/${servicio.ID}`, {
                 method: 'PUT',
                 headers: {
                     "Authorization": `Bearer ${token}`,
                     "Content-Type": "application/json" 
                 },
-                body: JSON.stringify({ nombre, descripcion })
+                body: JSON.stringify({ nombre, precio })
             });
 
             if (!response.ok) {
@@ -189,7 +176,7 @@ const cambiarFormulario = (opc, rol) => {
 
             event.target.reset();
             cambiarFormulario(1);
-            obtenerRoles();
+            obtenerServicios();
         });
     }else if(opc ==3){
         formulario.innerHTML = `
@@ -197,11 +184,11 @@ const cambiarFormulario = (opc, rol) => {
             <form id="Formulario-ver">
                 <div class="mb-3">
                     <label for="nombre" class="form-label">Nombre del rol</label>
-                    <input type="text" class="form-control" id="nombre" value="${rol.Nombre}" disabled>
+                    <input type="text" class="form-control" id="nombre" value="${servicio.Descripcion}" disabled>
                 </div>
                 <div class="mb-3">
-                    <label for="descripcion" class="form-label">Descripción</label>
-                    <textarea class="form-control" id="descripcion" rows="3" disabled>${rol.Descripcion}</textarea>
+                    <label for="precio" class="form-label">Descripción</label>
+                    <textarea class="form-control" id="precio" rows="3" disabled>${servicio.Precio}</textarea>
                 </div>
                 <button type="button" class="btn btn-secondary" onclick="cambiarFormulario(1)">Regresar</button>
             </form>
@@ -209,8 +196,8 @@ const cambiarFormulario = (opc, rol) => {
     }
 };
 
-window.editarCategoria = editarRol;
-window.eliminarCategoria = eliminarRol;
+window.editarServicio = editarServicio;
+window.eliminarServicio = eliminarServicio;
 window.cambiarFormulario = cambiarFormulario;
-window.verRol = verRol;
-window.obtenerRoles = obtenerRoles;
+window.verServicio = verServicio;
+window.obtenerServicios = obtenerServicios;

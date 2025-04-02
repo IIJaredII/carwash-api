@@ -25,10 +25,10 @@ document.getElementById("loginForm").addEventListener("submit", async (event) =>
     }
 });
 
-const verificarAccesoYRedirigir =()=> {
+async function verificarAccesoYRedirigir() {
     if (localStorage.getItem("token")) {
         token = localStorage.getItem("token");
-        const accessGranted = verificarAcceso(token);
+        const accessGranted = await verificarAcceso(token);
         if (accessGranted) {
             window.location.href = "/page/pagina";
         }else{
@@ -36,5 +36,6 @@ const verificarAccesoYRedirigir =()=> {
         }
     }
 }
+
 
 verificarAccesoYRedirigir();
