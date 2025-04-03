@@ -1,4 +1,5 @@
 require("dotenv").config({path: "../.env"});
+const { json } = require("express");
 const jwt = require("jsonwebtoken");
 
 const verifyToken = (req, res, next) => {
@@ -12,6 +13,17 @@ const verifyToken = (req, res, next) => {
     });
 };
 
+const verificarAcceso = (token) => {
+    if (!token) return { status: 401, message: "No autorizado" };
+
+    try {
+        const decoded = jwt.verify(token.split(" ")[1], process.env.JWT_SECRET);
+        return { status: 202, message: "OK", user: decoded };
+    } catch (error) {
+        return { status: 401, message: "Token inválido" };
+    }
+};
+
 const checkRole = (roles) => {
     return (req, res, next) => {
         if (!roles.includes(req.user.rol)) {
@@ -21,6 +33,7 @@ const checkRole = (roles) => {
     };
 };
 
+
 const generateToken = (user,rol) => {
     const payload = {
         id: user.ID,
@@ -28,8 +41,8 @@ const generateToken = (user,rol) => {
         rol:rol
     };
     console.log("Generando token para: " , payload);
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "8h" });
     return token;
 };
 
-module.exports = { verifyToken, checkRole, generateToken };
+module.exports = { verifyToken, checkRole, generateToken,verificarAcceso };

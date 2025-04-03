@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../bootstrap/bootstrap.min.css">
+    <link rel="stylesheet" href="../source/css/style.css">
+    <title>CRUD Roles</title>
+</head>
+<body>
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-sm-12 col-md-4 col-lg-4 col-xl-4" id="Formulario">
+                <h2>Registrar nuevo servicio</h2>
+                <form id="Formulario-agregar">
+                    <div class="mb-3">
+                        <label for="Descripcion" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="Descripcion" placeholder="Descripcion del servicio">
+                    </div>
+                    <div class="mb-3">
+                        <label for="precio" class="form-label">Descripcion</label>
+                        <input type="text" class="form-control" id="precio" placeholder="Precio del servicio">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Agregar</button>
+                </form>
+            </div>
+            <div class="col-sm-12 col-md-8 col-lg-8 col-xl-8">
+                <h2>Listado de los servicios</h2>
+                <div class="row">
+                    <div class="col-sm-12 col-md-3 col-lg-3 col-xl-3">
+                        <select class="form-select mb-3" aria-label="Default select example" id="opcion">
+                            <option value="0" selected>Mostrar todos</option>
+                            <option value="1">Buscar por ID</option>
+                          </select>  
+                    </div>
+                    <div class="col-sm-12 col-md-6 col-lg-6 col-xl-6">
+                        <input class="form-control mb-3" type="text" id="dato">
+                    </div>
+                    <div class="col-sm-12 col-md-3 col-lg-3 col-xl-3">
+                        <button type="button" class="btn btn-success mb-3" onclick="obtenerServicios()">Buscar</button>
+                    </div>
+                </div>
+                <div style="height: 62vh; overflow-y: auto;">
+                    <table class="table table-striped" style="table-layout: fixed; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">ID</th>
+                                <th style="width: 60%;">Servicio</th>
+                                <th style="width: 15%;">Precio</th>
+                                <th style="width: 15%;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listarServicios">
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script type="module" src="../source/js/crud_roles.js">
+</script>
+</html>
