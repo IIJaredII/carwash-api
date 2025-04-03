@@ -1,12 +1,12 @@
 import { verificarAcceso } from "./verificarToken.js";
 let token = "";
-const url="http://localhost:3000/api/";
-let data = []; 
+const url = "http://localhost:3000/api/";
+let data = [];
 
 document.addEventListener("DOMContentLoaded", async () => {
-    verificarAccesoYRedirigir();
-    obtenerRoles();
-    cambiarFormulario(1); 
+    await verificarAccesoYRedirigir();
+    await obtenerCategorias();
+    cambiarFormulario(1);
 });
 
 async function verificarAccesoYRedirigir() {
@@ -17,13 +17,13 @@ async function verificarAccesoYRedirigir() {
             localStorage.removeItem("token");
             window.location.href = "/";
         }
-    }else{
+    } else {
         localStorage.removeItem("token");
         window.location.href = "/";
     }
 }
 
-const obtenerRoles = async () => {
+const obtenerCategorias = async () => {
     try {
         const opc = document.getElementById('opcion').value;
         const dato = document.getElementById('dato').value;
@@ -31,154 +31,127 @@ const obtenerRoles = async () => {
 
         switch (parseInt(opc)) {
             case 0:
-                ruta=url+"roles/";
-                document.getElementById('dato').value="";
-            break;
+                ruta = url + "categorias/";
+                document.getElementById('dato').value = "";
+                break;
             case 1:
-                ruta=url+"roles/"+dato;
-            break;
+                ruta = url + "categorias/" + dato;
+                break;
         }
-            
 
         const response = await fetch(ruta, {
             method: 'GET',
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
+            headers: { "Authorization": `Bearer ${token}` }
         });
 
         if (!response.ok) {
-            console.error('Error al listar los roles');
+            console.error('Error al listar las categorías');
             return;
         }
+
         data = await response.json();
         const listaCategoria = document.getElementById('listarCategorias');
         listaCategoria.innerHTML = '';
 
-        data.forEach((rol,index) => {
+        data.forEach((categoria, index) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <th>${rol.ID}</th>
-                <th>${rol.Nombre}</th>
-                <th>${rol.Descripcion}</th>
+                <th>${categoria.ID}</th>
+                <th>${categoria.Nombre}</th>
+                <th>${categoria.Descripcion}</th>
                 <th>
                     <button class="btn btn-warning btn-sm" onclick="editarCategoria(${index})">Editar</button>
-                    <button class="btn btn-info btn-sm" onclick="verRol(${index})">Ver</button>
-                    <button class="btn btn-danger btn-sm" onclick="eliminarCategoria(${rol.ID})">borrar</button>
+                    <button class="btn btn-info btn-sm" onclick="verCategoria(${index})">Ver</button>
+                    <button class="btn btn-danger btn-sm" onclick="eliminarCategoria(${categoria.ID})">Borrar</button>
                 </th>
             `;
             listaCategoria.appendChild(tr);
         });
-
     } catch (error) {
-        console.error('Error al obtener los roles:', error);
+        console.error('Error al obtener las categorías:', error);
     }
 };
 
-
-
-function editarRol(index) {
-    const rol = data[index];
-    cambiarFormulario(2, rol);
+function editarCategoria(index) {
+    const categoria = data[index];
+    cambiarFormulario(2, categoria);
 };
 
-function verRol(index) {
-    const rol = data[index];
-    cambiarFormulario(3, rol);
+function verCategoria(index) {
+    const categoria = data[index];
+    cambiarFormulario(3, categoria);
 }
 
-
-const eliminarRol = async (id) => {
-    await fetch(url+`roles/${id}`, {
-        headers: {
-            "Authorization": `Bearer ${token}`
-        },
+const eliminarCategoria = async (id) => {
+    await fetch(url + `categorias/${id}`, {
+        headers: { "Authorization": `Bearer ${token}` },
         method: 'DELETE'
     });
-    obtenerRoles();
+    obtenerCategorias();
 };
 
-const cambiarFormulario = (opc, rol) => {
+const cambiarFormulario = (opc, categoria) => {
     const formulario = document.getElementById('Formulario');
     if (opc === 1) {
         formulario.innerHTML = `
             <h2>Registrar nueva categoría</h2>
             <form id="Formulario-agregar">
                 <div class="mb-3">
-                    <label for="nombre" class="form-label">Nombre del rol</label>
+                    <label for="nombre" class="form-label">Nombre de la categoría</label>
                     <input type="text" class="form-control" id="nombre" placeholder="Nombre de la categoría">
                 </div>
                 <div class="mb-3">
                     <label for="descripcion" class="form-label">Descripción</label>
-                    <textarea class="form-control" id="descripcion" rows="3" placeholder=""></textarea>
+                    <textarea class="form-control" id="descripcion" rows="3"></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary">Agregar</button>
             </form>
         `;
-        document.getElementById('descripcion').addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-            }
-        });
 
         document.getElementById('Formulario-agregar').addEventListener('submit', async (event) => {
             event.preventDefault();
             const nombre = document.getElementById('nombre').value;
             const descripcion = document.getElementById('descripcion').value;
 
-            console.log(nombre);
-            console.log(descripcion);
-
-            const response = await fetch(url+'roles/', {
+            const response = await fetch(url + 'categorias/', {
                 method: 'POST',
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json"  // Asegura que el servidor reciba JSON
-                },
+                headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ nombre, descripcion })
             });
 
             if (!response.ok) {
-                console.error('Error al agregar un rol');
+                console.error('Error al agregar una categoría');
                 return;
             }
 
             event.target.reset();
-            obtenerRoles();
+            obtenerCategorias();
         });
     } else if (opc === 2) {
         formulario.innerHTML = `
-            <h2>Editar rol</h2>
+            <h2>Editar categoría</h2>
             <form id="Formulario-editar">
                 <div class="mb-3">
-                    <label for="nombre" class="form-label">Nombre del rol</label>
-                    <input type="text" class="form-control" id="nombre" value="${rol.Nombre}" placeholder="Nombre de la categoría">
+                    <label for="nombre" class="form-label">Nombre de la categoría</label>
+                    <input type="text" class="form-control" id="nombre" value="${categoria.Nombre}">
                 </div>
                 <div class="mb-3">
                     <label for="descripcion" class="form-label">Descripción</label>
-                    <textarea class="form-control" id="descripcion" rows="3" placeholder="">${rol.Descripcion}</textarea>
+                    <textarea class="form-control" id="descripcion" rows="3">${categoria.Descripcion}</textarea>
                 </div>
                 <button type="submit" class="btn btn-primary">Editar</button>
                 <button type="button" class="btn btn-secondary" onclick="cambiarFormulario(1)">Cancelar</button>
             </form>
         `;
-        
-        document.getElementById('descripcion').addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-            }
-        });
+
         document.getElementById('Formulario-editar').addEventListener('submit', async (event) => {
             event.preventDefault();
             const nombre = document.getElementById('nombre').value;
             const descripcion = document.getElementById('descripcion').value;
 
-            const response = await fetch(url+`roles/${rol.ID}`, {
+            const response = await fetch(url + `categorias/${categoria.ID}`, {
                 method: 'PUT',
-                headers: {
-                    "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json" 
-                },
+                headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ nombre, descripcion })
             });
 
@@ -189,19 +162,19 @@ const cambiarFormulario = (opc, rol) => {
 
             event.target.reset();
             cambiarFormulario(1);
-            obtenerRoles();
+            obtenerCategorias();
         });
-    }else if(opc ==3){
+    } else if (opc === 3) {
         formulario.innerHTML = `
-            <h2>Ver rol</h2>
+            <h2>Ver categoría</h2>
             <form id="Formulario-ver">
                 <div class="mb-3">
-                    <label for="nombre" class="form-label">Nombre del rol</label>
-                    <input type="text" class="form-control" id="nombre" value="${rol.Nombre}" disabled>
+                    <label for="nombre" class="form-label">Nombre de la categoría</label>
+                    <input type="text" class="form-control" id="nombre" value="${categoria.Nombre}" disabled>
                 </div>
                 <div class="mb-3">
                     <label for="descripcion" class="form-label">Descripción</label>
-                    <textarea class="form-control" id="descripcion" rows="3" disabled>${rol.Descripcion}</textarea>
+                    <textarea class="form-control" id="descripcion" rows="3" disabled>${categoria.Descripcion}</textarea>
                 </div>
                 <button type="button" class="btn btn-secondary" onclick="cambiarFormulario(1)">Regresar</button>
             </form>
@@ -209,8 +182,8 @@ const cambiarFormulario = (opc, rol) => {
     }
 };
 
-window.editarCategoria = editarRol;
-window.eliminarCategoria = eliminarRol;
+window.editarCategoria = editarCategoria;
+window.eliminarCategoria = eliminarCategoria;
 window.cambiarFormulario = cambiarFormulario;
-window.verRol = verRol;
-window.obtenerRoles = obtenerRoles;
+window.verCategoria = verCategoria;
+window.obtenerCategorias = obtenerCategorias;

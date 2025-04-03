@@ -81,9 +81,9 @@ const obtenerEmpleados = async () => {
                 <th>${empleado.Nombre}</th>
                 <th>${nombreRol}</th>
                 <th>
-                    <button class="btn" onclick="editarCategoria(${index})">Editar</button>
-                    <button class="btn" onclick="verRol(${index})">Ver</button>
-                    <button class="btn" onclick="eliminarCategoria(${empleado.ID})">borrar</button>
+                    <button class="btn btn-warning btn-sm" onclick="editarCategoria(${index})">Editar</button>
+                    <button class="btn btn-info btn-sm" onclick="verRol(${index})">Ver</button>
+                    <button class="btn btn-danger btn-sm" onclick="eliminarCategoria(${empleado.ID})">borrar</button>
                 </th>
             `;
             listaEmpleados.appendChild(tr);

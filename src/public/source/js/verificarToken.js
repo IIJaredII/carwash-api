@@ -21,5 +21,3 @@ export const verificarAcceso = async (token) => {
     }
 };
 
-//async function verificarAcceso() {  
-//} 

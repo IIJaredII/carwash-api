@@ -52,6 +52,7 @@ CREATE TABLE Cotizaciones (
   Descripcion VARCHAR(255),
   Total DOUBLE,
   Estado INT,
+  Fecha_Cita DATE,
   Fecha_Creacion DATE,
   Fecha_Modificacion DATE,
   PRIMARY KEY (ID),
@@ -100,21 +101,35 @@ CREATE TABLE Empleado (
   FOREIGN KEY (ID_Rol) REFERENCES Rol(ID)
 );
 
-CREATE TABLE Servicios (
+CREATE TABLE CategoriaServicios (
   ID INT AUTO_INCREMENT,
-  Servicio VARCHAR(100),
-  Precio DOUBLE,
+  Nombre VARCHAR(100),
+  Descripcion VARCHAR(255),
   Estado INT,
   Fecha_Creacion DATE,
   Fecha_Modificacion DATE,
   PRIMARY KEY (ID)
 );
 
+CREATE TABLE Servicios (
+  ID INT AUTO_INCREMENT,
+  Servicio VARCHAR(100),
+  Precio DOUBLE,
+  ID_Categoria INT,
+  Estado INT,
+  Fecha_Creacion DATE,
+  Fecha_Modificacion DATE,
+  PRIMARY KEY (ID),
+  FOREIGN KEY (ID_Categoria) REFERENCES CategoriaServicios(ID)
+);
+
+
 CREATE TABLE CotizacionesDetalle (
   ID INT AUTO_INCREMENT,
   ID_Cotizaciones INT,
   ID_Servicios INT,
-  Nota VARCHAR(255),
+  NotaCliente VARCHAR(255),
+  NotaAdmin VARCHAR(255),
   Precio DOUBLE,
   Estado INT,
   Fecha_Creacion DATE,
@@ -268,11 +283,114 @@ END $$
 
 DELIMITER ;
 
+/*Procedimientos almacenados Servicios*/
+DELIMITER $$
+CREATE PROCEDURE insertarServicio(
+    IN p_servicio VARCHAR(255),
+    IN p_precio DOUBLE,
+    IN p_id_categoria INT
+)
+BEGIN
+    INSERT INTO Servicios (Servicio, Precio, ID_Categoria, Estado, Fecha_Creacion, Fecha_Modificacion)
+    VALUES (p_servicio, p_precio, p_id_categoria, 1, NOW(), NULL);
+END $$ 
+
+CREATE PROCEDURE actualizarServicio(
+    IN p_id INT,
+    IN p_servicio VARCHAR(255),
+    IN p_precio DOUBLE,
+    IN p_id_categoria INT
+)
+BEGIN
+    UPDATE Servicios 
+    SET Servicio = p_servicio,
+        Precio = p_precio,
+        ID_Categoria = p_id_categoria,
+        Fecha_Modificacion = NOW()
+    WHERE ID = p_id;
+END $$ 
+
+CREATE PROCEDURE eliminarServicio(
+    IN p_id INT
+)
+BEGIN
+    UPDATE Servicios 
+    SET Estado = 0, Fecha_Modificacion = NOW()
+    WHERE ID = p_id;
+END $$ 
+
+CREATE PROCEDURE obtenerServicios()
+BEGIN
+    SELECT ID, Servicio, Precio, ID_Categoria
+    FROM Servicios
+    WHERE Estado = 1;
+END $$ 
+
+CREATE PROCEDURE obtenerServicioPorID(
+    IN p_id INT
+)
+BEGIN
+    SELECT ID, Servicio, Precio, ID_Categoria
+    FROM Servicios
+    WHERE ID = p_id AND Estado = 1;
+END $$ 
+
+DELIMITER ;
+
+/*Procedimientos almacenados categorias*/
+DELIMITER $$
+
+CREATE PROCEDURE insertarCategoria(
+    IN p_nombre VARCHAR(255),
+    IN p_descripcion VARCHAR(255)
+)
+BEGIN
+    INSERT INTO CategoriaServicios (Nombre, Descripcion, Estado, Fecha_Creacion, Fecha_Modificacion)
+    VALUES (p_nombre, p_descripcion, 1, NOW(), NULL);
+END $$ 
+
+CREATE PROCEDURE actualizarCategoria(
+    IN p_id INT,
+    IN p_nombre VARCHAR(255),
+    IN p_descripcion VARCHAR(255)
+)
+BEGIN
+    UPDATE CategoriaServicios 
+    SET Nombre = p_nombre,
+        Descripcion = p_descripcion,
+        Fecha_Modificacion = NOW()
+    WHERE ID = p_id;
+END $$ 
+
+CREATE PROCEDURE eliminarCategoria(
+    IN p_id INT
+)
+BEGIN
+    UPDATE CategoriaServicios 
+    SET Estado = 0, Fecha_Modificacion = NOW()
+    WHERE ID = p_id;
+END $$ 
+
+CREATE PROCEDURE obtenerCategorias()
+BEGIN
+    SELECT ID, Nombre, Descripcion
+    FROM CategoriaServicios
+    WHERE Estado = 1;
+END $$ 
+
+CREATE PROCEDURE obtenerCategoriaPorID(
+    IN p_id INT
+)
+BEGIN
+    SELECT ID, Nombre, Descripcion
+    FROM CategoriaServicios
+    WHERE ID = p_id AND Estado = 1;
+END $$ 
+
 
 
 /*Procedimientos almacenados rol*/
 DELIMITER $$
-
 CREATE PROCEDURE insertarRol(
     IN p_nombre VARCHAR(255),
     IN p_descripcion VARCHAR(255)
@@ -348,7 +466,7 @@ CREATE PROCEDURE actualizarEmpleado(
     IN p_correo VARCHAR(255),
     IN p_telefono VARCHAR(255),
     IN p_contrasena VARCHAR(255),
-     IN p_direccion VARCHAR(255),
+    IN p_direccion VARCHAR(255),
     IN p_rol INT,
     IN p_foto VARCHAR(255)
 )
@@ -357,13 +475,19 @@ BEGIN
     SET Nombre = p_nombre,
         Correo = p_correo,
         Telefono = p_telefono,
-        Contraseña = p_contrasena,
         Direccion = p_direccion,
         ID_Rol = p_rol,
         Foto_empleado = p_foto,
         Fecha_Modificacion = NOW()
     WHERE ID = p_id;
+
+    IF p_contrasena <> '' THEN
+        UPDATE Empleado
+        SET Contraseña = p_contrasena
+        WHERE ID = p_id;
+    END IF;
 END $$
+
 
 CREATE PROCEDURE eliminarEmpleado(
     IN p_id INT
@@ -400,6 +524,106 @@ BEGIN
 END $$
 
 DELIMITER ;
+
+/*
+Solo funciona con mysql, no con mariadb
+DELIMITER $$
+
+CREATE PROCEDURE insertarCotizacion(
+    IN p_idCliente INT,
+    IN p_idCarro INT,
+    IN p_descripcion TEXT,
+    IN p_fecha_cita DATE,
+    IN p_detalles JSON 
+)
+BEGIN
+    DECLARE v_idCotizacion INT;
+
+    START TRANSACTION;
+    
+    -- Insertar en la tabla maestro
+    INSERT INTO Cotizaciones (ID_Cliente, ID_Carro, Descripcion, Fecha_Cita)
+    VALUES (p_idCliente, p_idCarro, p_descripcion,p_fecha_cita);
+
+    -- Obtener el ID de la cotización recién insertada
+    SET v_idCotizacion = LAST_INSERT_ID();
+
+    -- Insertar detalles usando JSON
+    INSERT INTO CotizacionesDetalle (ID_Cotizaciones, ID_Servicios, NotaCliente, Precio)
+    SELECT 
+        v_idCotizacion, 
+        IFNULL(JSON_UNQUOTE(JSON_EXTRACT(d.value, '$.idServicio')), 0), 
+        IFNULL(JSON_UNQUOTE(JSON_EXTRACT(d.value, '$.notaCliente')), ''), 
+        IFNULL(JSON_UNQUOTE(JSON_EXTRACT(d.value, '$.precio')), 0)
+    FROM JSON_TABLE(p_detalles, '$[*]') d;
+
+    COMMIT;
+END $$
+DELIMITER ;
+*/
+
+DELIMITER $$
+
+CREATE PROCEDURE insertarCotizacion(
+    IN p_idCliente INT,
+    IN p_idCarro INT,
+    IN p_descripcion TEXT,
+    IN p_fecha_cita DATE,
+    IN p_detalles JSON
+)
+BEGIN
+    DECLARE v_idCotizacion INT;
+    DECLARE v_totalDetalles INT;
+    DECLARE v_index INT DEFAULT 0;
+    
+    START TRANSACTION;
+
+    -- Insertar en la tabla Cotizaciones (maestro)
+    INSERT INTO Cotizaciones (ID_Cliente, ID_Carro, Descripcion, Fecha_Cita,Estado)
+    VALUES (p_idCliente, p_idCarro, p_descripcion, p_fecha_cita,5);
+
+    -- Obtener el ID de la cotización recién insertada
+    SET v_idCotizacion = LAST_INSERT_ID();
+
+    -- Obtener la cantidad de elementos en el JSON
+    SET v_totalDetalles = JSON_LENGTH(p_detalles);
+
+    -- Loop para insertar cada detalle
+    WHILE v_index < v_totalDetalles DO
+        INSERT INTO CotizacionesDetalle (ID_Cotizaciones, ID_Servicios, NotaCliente, Precio)
+        VALUES (
+            v_idCotizacion,
+            JSON_UNQUOTE(JSON_EXTRACT(p_detalles, CONCAT('$[', v_index, '].idServicio'))),
+            JSON_UNQUOTE(JSON_EXTRACT(p_detalles, CONCAT('$[', v_index, '].notaCliente'))),
+            JSON_UNQUOTE(JSON_EXTRACT(p_detalles, CONCAT('$[', v_index, '].precio')))
+        );
+
+        SET v_index = v_index + 1;
+    END WHILE;
+
+    COMMIT;
+END $$
+
+CREATE PROCEDURE obtenerCotizacionPorId(
+    IN p_id INT,
+)
+BEGIN
+    SELECT ID, ID_Cliente,ID_Carro,Descripcion,Fecha_Cita,Estado
+    FROM Cotizaciones
+    WHERE ID = p_id
+END $$
+
+CREATE PROCEDURE obtenerDetallesDeCotizacion(
+    IN p_idCotizacion INT,
+)
+BEGIN
+    SELECT ID, ID_Servicios,NotaCliente,NotaAdmin,Precio,Estado
+    FROM Cotizaciones
+    WHERE ID = p_idCotizacion
+END $$
+
+DELIMITER ;
+
 
 
 -- Llenar la tabla de Marcas utilizados en Honduras
