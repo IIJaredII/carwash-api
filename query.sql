@@ -685,7 +685,7 @@ BEGIN
         INSERT INTO Trabajos (ID_CotizacionDetalle, Estado, Fecha_Creacion, Fecha_Modificacion)
         VALUES (NEW.ID, 1, NOW(), NOW());
     END IF;
-END //
+END $$
 
 
 
