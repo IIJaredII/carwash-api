@@ -626,6 +626,63 @@ DELIMITER ;
 
 
 
+DELIMITER $$
+
+-- Procedimiento para obtener cotizaciones por su estado
+CREATE PROCEDURE obtenerCotizacionesPorEstado(
+    IN p_estado INT
+)
+BEGIN
+    SELECT * 
+    FROM Cotizaciones
+    WHERE Estado = p_estado;
+END $$
+
+-- Procedimiento para actualizar el precio, la nota del administrador y el estado
+CREATE PROCEDURE actualizarCotizacionDetalle(
+    IN p_id INT, 
+    IN p_nota_admin VARCHAR(255), 
+    IN p_precio DOUBLE, 
+    IN p_estado INT
+)
+BEGIN
+    UPDATE CotizacionesDetalle
+    SET NotaAdmin = p_nota_admin, 
+        Precio = p_precio, 
+        Estado = p_estado, 
+        Fecha_Modificacion = NOW()
+    WHERE ID = p_id;
+END $$
+
+-- Procedimiento para obtener todas las cotizaciones por usuario y por un estado
+CREATE PROCEDURE obtenerCotizacionesPorUsuarioYEstado(
+    IN p_id_cliente INT, 
+    IN p_estado INT
+)
+BEGIN
+    SELECT * 
+    FROM Cotizaciones
+    WHERE ID_Cliente = p_id_cliente AND Estado = p_estado;
+END $$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE TRIGGER CrearTrabajoCuandoCotizacionAceptada
+AFTER UPDATE ON Cotizaciones
+FOR EACH ROW
+BEGIN
+    
+    IF NEW.Estado = 1 AND OLD.Estado != 1 THEN
+        INSERT INTO Trabajos (ID_CotizacionDetalle, Estado, Fecha_Creacion, Fecha_Modificacion)
+        VALUES (NEW.ID_Carro, 0, NOW(), NOW());  
+    END IF;
+END $$
+
+DELIMITER ;
+
+
 -- Llenar la tabla de Marcas utilizados en Honduras
 INSERT INTO Marca (Nombre, Estado, Fecha_Creacion, Fecha_Modificacion) VALUES
 ('Toyota', 1, CURDATE(), CURDATE()),
