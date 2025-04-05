@@ -628,15 +628,22 @@ DELIMITER ;
 
 DELIMITER $$
 
--- Procedimiento para obtener cotizaciones por su estado
-CREATE PROCEDURE obtenerCotizacionesPorEstado(
-    IN p_estado INT
-)
+
+-- procedimiento almacenado para Obtener Cotizaciones Por Estado
+CREATE PROCEDURE ObtenerCotizacionesPorEstado(IN p_estado INT)
 BEGIN
-    SELECT * 
+    SELECT 
+        ID, 
+        ID_Servicios, 
+        NotaCliente, 
+        NotaAdmin, 
+        Precio, 
+        Estado
     FROM Cotizaciones
     WHERE Estado = p_estado;
 END $$
+
+
 
 -- Procedimiento para actualizar el precio, la nota del administrador y el estado
 CREATE PROCEDURE actualizarCotizacionDetalle(
@@ -669,16 +676,19 @@ DELIMITER ;
 
 DELIMITER $$
 
-CREATE TRIGGER CrearTrabajoCuandoCotizacionAceptada
-AFTER UPDATE ON Cotizaciones
+
+CREATE TRIGGER Trigger_AgregarTrabajo
+AFTER UPDATE ON CotizacionesDetalle
 FOR EACH ROW
 BEGIN
-    
     IF NEW.Estado = 1 AND OLD.Estado != 1 THEN
         INSERT INTO Trabajos (ID_CotizacionDetalle, Estado, Fecha_Creacion, Fecha_Modificacion)
-        VALUES (NEW.ID_Carro, 0, NOW(), NOW());  
+        VALUES (NEW.ID, 1, NOW(), NOW());
     END IF;
-END $$
+END //
+
+
+
 
 DELIMITER ;
 
