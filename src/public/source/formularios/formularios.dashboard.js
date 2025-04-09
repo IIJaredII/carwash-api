@@ -124,4 +124,5 @@ export function revisarTrabajo(){
             </div>
         </div>
     `;
+    return html;
 }
