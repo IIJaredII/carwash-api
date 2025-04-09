@@ -22,27 +22,11 @@ const insertarCotizacion = async (req, res) => {
     }
 }
 
-const obtenerCotizaciones = async (req, res) => {
+const obtenerCotizacionesPorEstado = async (req, res) => {
     const { estado } = req.params; 
 
-    let procedimiento = '';
-    
-    switch(parseInt(estado)) {
-        case 3:
-            procedimiento = 'obtenerCotizacionesPendientes'; 
-            break;
-        case 1:
-            procedimiento = 'obtenerCotizacionesAceptadas';
-            break;
-        case 5:
-            procedimiento = 'obtenerCotizacionesFaltantes';
-            break;
-        default:
-            return res.status(400).json({ error: 'Estado inválido' }); 
-    }
-
     try {
-        const [result] = await connection.promise().query(`CALL ${procedimiento}()`);
+        const [result] = await connection.promise().query(`CALL obtenerCotizacionesPorEstado()`, [estado]);
         
         res.status(200).json(result);
     } catch (error) {
@@ -97,10 +81,18 @@ const obtenerCotizacionConDetalles = async (req, res) => {
     }
 };
 
+const actualzizarDetallesCotizacion = async (req, res) => {
+    try {
+        
+    } catch (error) {
+
+    }
+}
+
 
 
 module.exports = {
     insertarCotizacion,
     obtenerCotizacionConDetalles,
-    obtenerCotizaciones,
+    obtenerCotizacionesPorEstado,
 }
