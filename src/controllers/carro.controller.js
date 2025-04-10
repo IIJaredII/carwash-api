@@ -129,6 +129,23 @@ const obtenerModeloPorIdMarca = async (req,res) => {
     }
 }
 
+const obtenerMarcas = async (req,res) => {
+    try{
+    
+        const [results] = await connection.promise().query("SELECT * FROM Marca");
+
+        if(!results[0] || results[0].length === 0){
+            return res.status(404).json({mensaje: "Modelo no encontrado"});
+        }
+
+        res.json(results);
+
+    }catch(error){
+        console.error("Error al obtener modelo por id Marca: ",error);
+        return res.status(500).json({mensaje: "Error al obtener modelo por id Marca"});
+    }
+}
+
 module.exports = {
     insertarCarro,
     obtenerCarroPorIdCliente,
@@ -136,5 +153,6 @@ module.exports = {
     obtenerCarros,
     actualizarCarro,
     eliminarCarro,
-    obtenerModeloPorIdMarca
+    obtenerModeloPorIdMarca,
+    obtenerMarcas
 }

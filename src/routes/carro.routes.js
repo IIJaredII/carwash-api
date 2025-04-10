@@ -9,4 +9,5 @@ router.get('/',carroController.obtenerCarros);
 router.put('/',carroController.actualizarCarro);
 router.delete('/',carroController.eliminarCarro);
 router.get('/modelo',carroController.obtenerModeloPorIdMarca)
+router.get("/marcas",carroController.obtenerMarcas);
 module.exports = router;
