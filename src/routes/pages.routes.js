@@ -22,5 +22,9 @@ router.get("/crud-servicios", (req, res) => {
     res.sendFile(path.join(__dirname, "../public/pages/crud_servicios.html"));
 });
 
+router.get("/crud-categorias", (req, res) => {
+    res.sendFile(path.join(__dirname, "../public/pages/crud_categorias.html"));
+});
+
 
 module.exports = router;

@@ -5,19 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../bootstrap/bootstrap.min.css">
     <link rel="stylesheet" href="../source/css/style.css">
-    <title>CRUD Servicios</title>
+    <title>CRUD Categorías de Servicios</title>
 </head>
 <body>
     <div class="container my-5">
         <div class="row">
-            <div class="col-sm-12 col-md-4 col-lg-4 col-xl-4" id="Formulario"></div>
-
+            <div class="col-sm-12 col-md-4 col-lg-4 col-xl-4" id="Formulario">
+                <h2>Registrar nueva Categoría</h2>
+                <form id="Formulario-agregar">
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="nombre" placeholder="Nombre de la categoría">
+                    </div>
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label">Descripción</label>
+                        <input type="text" class="form-control" id="descripcion" placeholder="Descripción de la categoría">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Agregar</button>
+                </form>
+            </div>
             <div class="col-sm-12 col-md-8 col-lg-8 col-xl-8">
-                <h2>Listado de Servicios</h2>
+                <h2>Listado de Categorías</h2>
                 <div class="row">
                     <div class="col-sm-12 col-md-3 col-lg-3 col-xl-3">
                         <select class="form-select mb-3" aria-label="Default select example" id="opcion">
-                            <option value="0" selected>Mostrar todos</option>
+                            <option value="0" selected>Mostrar todas</option>
                             <option value="1">Buscar por ID</option>
                         </select>  
                     </div>
@@ -25,7 +37,7 @@
                         <input class="form-control mb-3" type="text" id="dato">
                     </div>
                     <div class="col-sm-12 col-md-3 col-lg-3 col-xl-3">
-                        <button type="button" class="btn btn-success mb-3" onclick="obtenerServicios()">Buscar</button>
+                        <button type="button" class="btn btn-success mb-3" onclick="obtenerCategorias()">Buscar</button>
                     </div>
                 </div>
                 <div style="height: 62vh; overflow-y: auto;">
@@ -33,13 +45,13 @@
                         <thead>
                             <tr>
                                 <th style="width: 10%;">ID</th>
-                                <th style="width: 40%;">Servicio</th>
-                                <th style="width: 10%;">Precio</th>
-                                <th style="width: 20%;">Categoría</th>
-                                <th style="width: 20%;">Acciones</th>
+                                <th style="width: 20%;">Nombre</th>
+                                <th style="width: 55%;">Descripción</th>
+                                <th style="width: 15%;">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="listarServicios">
+                        <tbody id="listarCategorias">
+                            
                         </tbody>
                     </table>
                 </div>
@@ -47,5 +59,5 @@
         </div>
     </div>
 </body>
-<script type="module" src="../source/js/crud_servicios.js"></script>
+<script type="module" src="../source/js/crud_categorias.js"></script>
 </html>
