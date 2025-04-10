@@ -45,18 +45,36 @@ CREATE TABLE Clientes (
   PRIMARY KEY (ID)
 );
 
+CREATE TABLE Ubicaciones (
+  ID INT AUTO_INCREMENT,
+  ID_Cliente INT,
+  Nombre VARCHAR(100),
+  Referencia VARCHAR(255),
+  Longitud DOUBLE,
+  Latitud DOUBLE,
+  Estado INT,
+  Fecha_Creacion DATE,
+  Fecha_Modificacion DATE,
+  PRIMARY KEY (ID),
+  FOREIGN KEY (ID_Cliente) REFERENCES Clientes(ID)
+);
+
+
 CREATE TABLE Cotizaciones (
   ID INT AUTO_INCREMENT,
   ID_Cliente INT,
   ID_Carro INT,
   Descripcion VARCHAR(255),
   Total DOUBLE,
+  ID_Ubicacion INT,
+  Modalidad INT,
   Estado INT,
   Fecha_Cita DATE,
   Fecha_Creacion DATE,
   Fecha_Modificacion DATE,
   PRIMARY KEY (ID),
-  FOREIGN KEY (ID_Cliente) REFERENCES Clientes(ID)
+  FOREIGN KEY (ID_Cliente) REFERENCES Clientes(ID),
+  FOREIGN KEY (ID_Ubicacion) REFERENCES Ubicaciones(ID)
 );
 
 CREATE TABLE Referencia_a_la_tarjeta (
@@ -171,20 +189,6 @@ CREATE TABLE Evidencias (
   Fecha_Modificacion DATE,
   PRIMARY KEY (ID),
   FOREIGN KEY (ID_Trabajos) REFERENCES Trabajos(ID)
-);
-
-CREATE TABLE Ubicaciones (
-  ID INT AUTO_INCREMENT,
-  ID_Cliente INT,
-  Nombre VARCHAR(100),
-  Referencia VARCHAR(255),
-  Longitud DOUBLE,
-  Latitud DOUBLE,
-  Estado INT,
-  Fecha_Creacion DATE,
-  Fecha_Modificacion DATE,
-  PRIMARY KEY (ID),
-  FOREIGN KEY (ID_Cliente) REFERENCES Clientes(ID)
 );
 
 CREATE TABLE Carros (
@@ -605,21 +609,21 @@ BEGIN
 END $$
 
 CREATE PROCEDURE obtenerCotizacionPorId(
-    IN p_id INT,
+    IN p_id INT
 )
 BEGIN
     SELECT ID, ID_Cliente,ID_Carro,Descripcion,Fecha_Cita,Estado
     FROM Cotizaciones
-    WHERE ID = p_id
+    WHERE ID = p_id;
 END $$
 
 CREATE PROCEDURE obtenerDetallesDeCotizacion(
-    IN p_idCotizacion INT,
+    IN p_idCotizacion INT
 )
 BEGIN
     SELECT ID, ID_Servicios,NotaCliente,NotaAdmin,Precio,Estado
     FROM Cotizaciones
-    WHERE ID = p_idCotizacion
+    WHERE ID = p_idCotizacion;
 END $$
 
 DELIMITER ;
@@ -627,7 +631,6 @@ DELIMITER ;
 
 
 DELIMITER $$
-
 
 -- procedimiento almacenado para Obtener Cotizaciones Por Estado
 CREATE PROCEDURE ObtenerCotizacionesPorEstado(IN p_estado INT)
@@ -674,6 +677,8 @@ END $$
 
 DELIMITER ;
 
+
+
 DELIMITER $$
 
 
@@ -686,8 +691,6 @@ BEGIN
         VALUES (NEW.ID, 1, NOW(), NOW());
     END IF;
 END $$
-
-
 
 
 DELIMITER ;

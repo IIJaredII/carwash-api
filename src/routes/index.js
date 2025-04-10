@@ -11,6 +11,7 @@ const carroRoutes = require("./carro.routes")
 const servicioRoutes = require("./servicios.routes");
 const categoriaRoutes = require("./categorias.routes");
 const cotizacionRoutes = require("./cotizaciones.routes");
+const trabajosRoutes = require("./trabajos.routes");
 
 
 // Unificar rutas aquí
@@ -23,4 +24,6 @@ router.use("/carros",carroRoutes);
 router.use("/servicios",servicioRoutes);
 router.use("/categorias",categoriaRoutes);
 router.use("/cotizaciones",cotizacionRoutes);
+router.use("/trabajos",trabajosRoutes);
+
 module.exports = router;
