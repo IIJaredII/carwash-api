@@ -45,7 +45,7 @@ const loginEmpleado = async (req, res) => {
 
         if(user.Contraseña === contrasena) {
             const token = generateToken(user,user.Rol);
-            res.json({ token });
+            res.json({ token, id:user.ID, username: user.Nombre });
         }else{
             res.status(404).json({ mensaje: "Contraseña incorrecta" });
         }
