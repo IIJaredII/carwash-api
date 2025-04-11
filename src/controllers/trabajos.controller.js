@@ -32,7 +32,21 @@ const obtenerTabajosPorCotizaciones = async (req, res) => {
     }
 }
 
+const revisarDetallesCotizacion = async (req, res) => {
+   try{
+        const {detalles} = req.body;
+        const [result] = await connection.promise().query(
+            "CALL actualizarCotizacionDetalle(?)",{detalles}
+        );
+        res.status(200)
+    }catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error al obtener los trabajos' });
+    }
+}
+
 module.exports = {
     obtenerTabajosPorCotizaciones,
-    obtenerTabajoPorEmpleado
+    obtenerTabajoPorEmpleado,
+    revisarDetallesCotizacion
 }

@@ -32,12 +32,26 @@ CREATE TABLE Modelo (
   FOREIGN KEY (ID_Marca) REFERENCES Marca(ID)
 );
 
+CREATE TABLE Carros (
+  ID INT AUTO_INCREMENT,
+  ID_Cliente INT,
+  Placa VARCHAR(20),
+  Modelo INT,
+  Anio YEAR,
+  Estado INT,
+  Fecha_Creacion DATE,
+  Fecha_Modificacion DATE,
+  PRIMARY KEY (ID),
+  FOREIGN KEY (ID_Cliente) REFERENCES Clientes(ID),
+  FOREIGN KEY (Modelo) REFERENCES Modelo(ID)
+);
+ 
 CREATE TABLE Clientes (
   ID INT AUTO_INCREMENT,
   Nombre VARCHAR(100),
   Correo VARCHAR(150),
   Telefono VARCHAR(20),
-  Contraseña VARCHAR(255),
+  Contrasena VARCHAR(255),
   Estado INT,
   URL_FOTO VARCHAR(255),
   Fecha_Creacion DATE,
@@ -74,6 +88,7 @@ CREATE TABLE Cotizaciones (
   Fecha_Modificacion DATE,
   PRIMARY KEY (ID),
   FOREIGN KEY (ID_Cliente) REFERENCES Clientes(ID),
+  FOREIGN KEY (ID_Carro) REFERENCES Carros(ID),
   FOREIGN KEY (ID_Ubicacion) REFERENCES Ubicaciones(ID)
 );
 
@@ -108,7 +123,7 @@ CREATE TABLE Empleado (
   Nombre VARCHAR(100),
   Correo VARCHAR(150),
   Telefono VARCHAR(20),
-  Contraseña VARCHAR(255),
+  Contrasena VARCHAR(255),
   Direccion VARCHAR(255),
   ID_Rol INT,
   Foto_empleado VARCHAR(255),
@@ -191,20 +206,6 @@ CREATE TABLE Evidencias (
   FOREIGN KEY (ID_Trabajos) REFERENCES Trabajos(ID)
 );
 
-CREATE TABLE Carros (
-  ID INT AUTO_INCREMENT,
-  ID_Cliente INT,
-  Placa VARCHAR(20),
-  Modelo INT,
-  Año YEAR,
-  Estado INT,
-  Fecha_Creacion DATE,
-  Fecha_Modificacion DATE,
-  PRIMARY KEY (ID),
-  FOREIGN KEY (ID_Cliente) REFERENCES Clientes(ID),
-  FOREIGN KEY (Modelo) REFERENCES Modelo(ID)
-);
-
 CREATE TABLE Tarjetas (
   ID INT AUTO_INCREMENT,
   Numero_de_tarjeta VARCHAR(16),
@@ -228,7 +229,7 @@ CREATE PROCEDURE insertarCliente(
     IN p_foto VARCHAR(255)
 )
 BEGIN
-    INSERT INTO Clientes (Nombre, Correo, Telefono, Contraseña, URL_FOTO, Estado, Fecha_Creacion, Fecha_Modificacion)
+    INSERT INTO Clientes (Nombre, Correo, Telefono, Contrasena, URL_FOTO, Estado, Fecha_Creacion, Fecha_Modificacion)
     VALUES (p_nombre, p_correo, p_telefono, p_contrasena, p_foto, 1, NOW(), null);
 END $$
 
@@ -245,7 +246,7 @@ BEGIN
     SET Nombre = p_nombre,
         Correo = p_correo,
         Telefono = p_telefono,
-        Contraseña = p_contrasena,
+        Contrasena = p_contrasena,
         URL_FOTO = p_foto,
         Fecha_Modificacion = NOW()
     WHERE ID = p_id;
@@ -271,7 +272,7 @@ CREATE PROCEDURE loginClientes(
   IN p_correo VARCHAR(255)
 )
 BEGIN
-    SELECT ID, Nombre,Contraseña
+    SELECT ID, Nombre,Contrasena
     FROM Clientes
     WHERE p_correo = Correo AND Estado = 1;
 END $$
@@ -460,7 +461,7 @@ CREATE PROCEDURE insertarEmpleado(
     IN p_foto VARCHAR(255)
 )
 BEGIN
-    INSERT INTO Empleado (Nombre, Correo, Telefono, Contraseña,Direccion,ID_Rol, Foto_empleado, Estado, Fecha_Creacion, Fecha_Modificacion)
+    INSERT INTO Empleado (Nombre, Correo, Telefono, Contrasena,Direccion,ID_Rol, Foto_empleado, Estado, Fecha_Creacion, Fecha_Modificacion)
     VALUES (p_nombre, p_correo, p_telefono, p_contrasena,p_direccion,p_rol, p_foto, 1, NOW(), null);
 END $$
 
@@ -487,7 +488,7 @@ BEGIN
 
     IF p_contrasena <> '' THEN
         UPDATE Empleado
-        SET Contraseña = p_contrasena
+        SET Contrasena = p_contrasena
         WHERE ID = p_id;
     END IF;
 END $$
@@ -513,7 +514,7 @@ CREATE PROCEDURE loginEmpleado(
   IN p_correo VARCHAR(255)
 )
 BEGIN
-    SELECT e.ID, e.Nombre, e.Contraseña, e.ID_Rol AS Rol
+    SELECT e.ID, e.Nombre, e.Contrasena, e.ID_Rol AS Rol
     FROM empleado e
     WHERE e.Correo = p_correo AND e.Estado = 1;
 END $$
@@ -584,7 +585,7 @@ BEGIN
 
     -- Insertar en la tabla Cotizaciones (maestro)
     INSERT INTO Cotizaciones (ID_Cliente, ID_Carro, Descripcion, Fecha_Cita,Estado)
-    VALUES (p_idCliente, p_idCarro, p_descripcion, p_fecha_cita,5);
+    VALUES (p_idCliente, p_idCarro, p_descripcion, p_fecha_cita,1);
 
     -- Obtener el ID de la cotización recién insertada
     SET v_idCotizacion = LAST_INSERT_ID();
@@ -649,7 +650,7 @@ END $$
 
 
 -- Procedimiento para actualizar el precio, la nota del administrador y el estado
-CREATE PROCEDURE actualizarCotizacionDetalle(
+/*CREATE PROCEDURE actualizarCotizacionDetalle(
     IN p_id INT, 
     IN p_nota_admin VARCHAR(255), 
     IN p_precio DOUBLE, 
@@ -662,7 +663,45 @@ BEGIN
         Estado = p_estado, 
         Fecha_Modificacion = NOW()
     WHERE ID = p_id;
+END $$*/
+
+DELIMITER $$
+
+CREATE PROCEDURE actualizarCotizacionDetalle(
+    IN p_detalles JSON
+)
+BEGIN
+    DECLARE v_totalDetalles INT;
+    DECLARE v_index INT DEFAULT 0;
+    DECLARE v_idDetalle INT;
+    DECLARE v_notaAdmin VARCHAR(255);
+    DECLARE v_precio DOUBLE;
+
+    START TRANSACTION;
+
+    SET v_totalDetalles = JSON_LENGTH(p_detalles);
+
+    WHILE v_index < v_totalDetalles DO
+
+        SET v_idDetalle = JSON_UNQUOTE(JSON_EXTRACT(p_detalles, CONCAT('$[', v_index, '].id')));
+        SET v_notaAdmin = JSON_UNQUOTE(JSON_EXTRACT(p_detalles, CONCAT('$[', v_index, '].notaAdmin')));
+        SET v_precio = JSON_UNQUOTE(JSON_EXTRACT(p_detalles, CONCAT('$[', v_index, '].precio')));
+
+        UPDATE CotizacionesDetalle
+        SET 
+            NotaAdmin = v_notaAdmin,
+            Precio = v_precio,
+            Fecha_Modificacion = NOW()
+        WHERE ID = v_idDetalle;
+
+        SET v_index = v_index + 1;
+    END WHILE;
+
+    COMMIT;
 END $$
+
+DELIMITER ;
+
 
 -- Procedimiento para obtener todas las cotizaciones por usuario y por un estado
 CREATE PROCEDURE obtenerCotizacionesPorUsuarioYEstado(
@@ -677,10 +716,67 @@ END $$
 
 DELIMITER ;
 
+DELIMITER &&
+
+/Mostrar la cotizacion por empleado/
+
+CREATE PROCEDURE obtenerTabajoDeEmpleado(
+    IN p_id_empleado
+)
+BEGIN
+SELECT
+    c.ID AS ID_Cotizacion,
+    DATE(c.Fecha_Cita) AS Fecha,
+    TIME(c.Fecha_Cita) AS Hora,
+    c.Estado,
+    c.Modalidad
+FROM TrabajoEmpleado te
+INNER JOIN Trabajos t ON te.ID_Trabajo = t.ID
+INNER JOIN CotizacionesDetalle cd ON t.ID_CotizacionDetalle = cd.ID
+INNER JOIN Cotizaciones c ON cd.ID_Cotizaciones = c.ID
+WHERE te.ID_Empleado = p_id_empleado
+GROUP BY c.ID;
+END $$
+
+/Mostrar la lista de trabajo por empleado/
+SELECT
+    t.ID AS ID_Trabajo,
+    s.Servicio,
+    cd.NotaAdmin,
+    cd.NotaCliente,
+    t.Estado /no estoy segura del estado que se va a cambiar/
+FROM TrabajoEmpleado te
+INNER JOIN Trabajos t ON te.ID_Trabajo = t.ID
+INNER JOIN CotizacionesDetalle cd ON t.ID_CotizacionDetalle = cd.ID
+INNER JOIN Cotizaciones c ON cd.ID_Cotizaciones = c.ID
+INNER JOIN Servicios s ON cd.ID_Servicios = s.ID
+WHERE te.ID_Empleado = 2;
+
+SELECT
+    cl.ID AS ID_Cliente,
+    cl.Telefono,
+    car.Placa,
+    car.Anio,
+    m.Modelo,
+    u.Longitud,
+    u.Latitud,
+    u.Referencia
+FROM TrabajoEmpleado te
+INNER JOIN Trabajos t ON te.ID_Trabajo = t.ID
+INNER JOIN CotizacionesDetalle cd ON t.ID_CotizacionDetalle = cd.ID
+INNER JOIN Cotizaciones c ON cd.ID_Cotizaciones = c.ID
+INNER JOIN Clientes cl ON c.ID_Cliente = cl.ID
+INNER JOIN Carros car ON c.ID_Carro = car.ID
+INNER JOIN Modelo m ON car.Modelo= m.ID
+LEFT JOIN Ubicaciones u ON c.ID_Ubicacion = u.ID 
+WHERE te.ID_Empleado = 2 AND c.ID = 1
+LIMIT 1;
+
+DELIMITER ;
+
 
 
 DELIMITER $$
-
 
 CREATE TRIGGER Trigger_AgregarTrabajo
 AFTER UPDATE ON CotizacionesDetalle
