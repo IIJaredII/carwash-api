@@ -34,14 +34,14 @@ const checkRole = (roles) => {
 };
 
 
-const generateToken = (user,rol) => {
+const generateToken = (time,user,rol) => {
     const payload = {
         id: user.ID,
         username: user.Nombre,
         rol:rol
     };
     console.log("Generando token para: " , payload);
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "8h" });
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: time });
     return token;
 };
 

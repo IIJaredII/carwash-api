@@ -45,6 +45,18 @@ const revisarDetallesCotizacion = async (req, res) => {
     }
 }
 
+const emplezarTrabajo = async (req, res) => {
+    try{
+        const {idTrabajo,} = req.params;
+        const [result] = await connection.promise().query(
+            "CALL empezarTrabajo(?)",{idTrabajo}
+        );
+        res.status(200);
+    }catch(error) {
+        res.status(500).json({error: "Error al empezar el trabajo"});
+    }
+}
+
 module.exports = {
     obtenerTabajosPorCotizaciones,
     obtenerTabajoPorEmpleado,

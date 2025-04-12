@@ -1,4 +1,5 @@
 const connection = require("../config/db");
+const { getIO } = require("../config/socket");
 
 const insertarRol = async (req,res) => {
     try{
@@ -21,6 +22,9 @@ const insertarRol = async (req,res) => {
             "CALL insertarRol(?, ?)",
             [nombre,descripcion]
         );
+
+        const io = getIO();
+        io.emit("nuevoRol", { id: results.insertId, nombre, descripcion });
 
         res.status(201).json({
             mensaje: "Rol agregado exitosamente",
@@ -85,6 +89,9 @@ const acualizarRol = async (req,res) => {
         }
 
         await connection.promise().query("CALL actualizarRol(?,?,?)",[id,nombre,descripcion]);
+        const io = getIO();
+        io.emit("rolActualizado", { id, nombre, descripcion });
+
         res.json({mensaje: "Rol actualizado exitosamente"});
     }catch(error){
         console.error("Error al actualizar rol: ",error);
@@ -97,6 +104,8 @@ const eliminarRol = async(req,res) => {
         const {id} = req.params;
 
         await connection.promise().query("CALL eliminarRol(?)",[id]);
+        const io = getIO();
+        io.emit("rolEliminado", { id });
 
         res.json({mensaje: "Rol eliminado correctamente"});
 

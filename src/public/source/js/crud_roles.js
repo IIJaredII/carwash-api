@@ -3,12 +3,6 @@ let token = "";
 const url="http://localhost:3000/api/";
 let data = []; 
 
-document.addEventListener("DOMContentLoaded", async () => {
-    verificarAccesoYRedirigir();
-    obtenerRoles();
-    cambiarFormulario(1); 
-});
-
 async function verificarAccesoYRedirigir() {
     if (localStorage.getItem("token")) {
         token = localStorage.getItem("token");
@@ -22,6 +16,30 @@ async function verificarAccesoYRedirigir() {
         window.location.href = "/";
     }
 }
+
+const socket = io("http://localhost:3000");  // Asegúrate de que el puerto coincide con tu servidor
+
+// Escuchar el evento "nuevoRol"
+socket.on("nuevoRol", (data) => {
+  console.log("Nuevo rol agregado:", data);
+  // Actualiza la lista de roles en el frontend
+  obtenerRoles();  // Función que ya tienes para obtener roles
+});
+
+// Escuchar el evento "rolActualizado"
+socket.on("rolActualizado", (data) => {
+  console.log("Rol actualizado:", data);
+  // Actualiza la lista de roles en el frontend
+  obtenerRoles();
+});
+
+// Escuchar el evento "rolEliminado"
+socket.on("rolEliminado", (data) => {
+  console.log("Rol eliminado:", data);
+  // Actualiza la lista de roles en el frontend
+  obtenerRoles();
+});
+
 
 const obtenerRoles = async () => {
     try {
@@ -214,3 +232,9 @@ window.eliminarCategoria = eliminarRol;
 window.cambiarFormulario = cambiarFormulario;
 window.verRol = verRol;
 window.obtenerRoles = obtenerRoles;
+
+document.addEventListener("DOMContentLoaded", async () => {
+    verificarAccesoYRedirigir();
+    obtenerRoles();
+    cambiarFormulario(1); 
+});
