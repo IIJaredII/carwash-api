@@ -1,14 +1,17 @@
 const connection = require("../config/db");
+const auth = require("../middlewares/authConfig");
 
 const obtenerTabajoPorEmpleado = async (req, res) => {
     try {
-        const { idEmpleado } = req.params;
+        const token = req.headers["authorization"];
+        const idEmpleado = auth.getUserIdFromToken(token);
+
         const [result] = await connection.promise().query(
-            "CALL obtenerTabajoDeEmpleado(?)",
+            "CALL obtenerTrabajoDeEmpleado(?)",
             [idEmpleado]
         );
 
-        res.status(200).json(result);
+        res.status(200).json(result[0]);
 
     } catch (error) {
         console.error(error);
@@ -18,7 +21,10 @@ const obtenerTabajoPorEmpleado = async (req, res) => {
 
 const obtenerTabajosPorCotizaciones = async (req, res) => {
     try {
-        const { idEmpleado,idCotizacion } = req.params;
+        const token = req.headers["authorization"];
+        const idEmpleado = auth.getUserIdFromToken(token);
+        
+        const { idCotizacion } = req.params;
         const [result] = await connection.promise().query(
             "CALL obtenerTabajosAsignados(?,?)",
             [idEmpleado, idCotizacion]

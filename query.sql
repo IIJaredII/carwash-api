@@ -720,23 +720,24 @@ DELIMITER &&
 
 /Mostrar la cotizacion por empleado/
 
-CREATE PROCEDURE obtenerTabajoDeEmpleado(
-    IN p_id_empleado
+CREATE PROCEDURE obtenerTrabajoDeEmpleado(
+    IN p_id_empleado INT
 )
 BEGIN
-SELECT
-    c.ID AS ID_Cotizacion,
-    DATE(c.Fecha_Cita) AS Fecha,
-    TIME(c.Fecha_Cita) AS Hora,
-    c.Estado,
-    c.Modalidad
-FROM TrabajoEmpleado te
-INNER JOIN Trabajos t ON te.ID_Trabajo = t.ID
-INNER JOIN CotizacionesDetalle cd ON t.ID_CotizacionDetalle = cd.ID
-INNER JOIN Cotizaciones c ON cd.ID_Cotizaciones = c.ID
-WHERE te.ID_Empleado = p_id_empleado
-GROUP BY c.ID;
+    SELECT
+        c.ID AS id,
+        DATE(c.Fecha_Cita) AS fechaCita,
+        TIME(c.Fecha_Cita) AS horaTrabajo,
+        c.Estado AS estado,
+        c.Modalidad AS modalidad
+    FROM TrabajoEmpleado te
+    INNER JOIN Trabajos t ON te.ID_Trabajo = t.ID
+    INNER JOIN CotizacionesDetalle cd ON t.ID_CotizacionDetalle = cd.ID
+    INNER JOIN Cotizaciones c ON cd.ID_Cotizaciones = c.ID
+    WHERE te.ID_Empleado = p_id_empleado AND (c.Estado = 3 OR c.Estado = 4)
+    GROUP BY c.ID;
 END $$
+
 
 /Mostrar la lista de trabajo por empleado/
 SELECT
@@ -868,3 +869,17 @@ INSERT INTO Modelo (ID_Marca, Modelo, Estado, Fecha_Creacion, Fecha_Modificacion
 /*Triggers*/
 
 /*Vistas*/
+
+/*
+1.sin revisar 
+
+2. revisado
+
+3. Aceptado 
+
+4. en proceso
+
+5.Finalizado 
+
+6.Rechazado
+*/

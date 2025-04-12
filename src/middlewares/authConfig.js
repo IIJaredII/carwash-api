@@ -45,4 +45,17 @@ const generateToken = (time,user,rol) => {
     return token;
 };
 
-module.exports = { verifyToken, checkRole, generateToken,verificarAcceso };
+const getUserIdFromToken = (token) => {
+    if (!token) return null;
+
+    try {
+        const decoded = jwt.verify(token.split(" ")[1], process.env.JWT_SECRET);
+        return decoded.id || null;
+    } catch (error) {
+        console.error("Error al decodificar el token:", error.message);
+        return null;
+    }
+};
+
+
+module.exports = { verifyToken, checkRole, generateToken,verificarAcceso,getUserIdFromToken };

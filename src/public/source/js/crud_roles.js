@@ -1,6 +1,7 @@
 import { verificarAcceso } from "./verificarToken.js";
 let token = "";
-const url="http://localhost:3000/api/";
+const urlBase ="https://hmqphld5-3000.use2.devtunnels.ms/";
+const url=urlBase+"api/";
 let data = []; 
 
 async function verificarAccesoYRedirigir() {
@@ -17,7 +18,7 @@ async function verificarAccesoYRedirigir() {
     }
 }
 
-const socket = io("http://localhost:3000");  // Asegúrate de que el puerto coincide con tu servidor
+const socket = io(urlBase);  // Asegúrate de que el puerto coincide con tu servidor
 
 // Escuchar el evento "nuevoRol"
 socket.on("nuevoRol", (data) => {

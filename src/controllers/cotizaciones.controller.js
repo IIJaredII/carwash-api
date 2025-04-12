@@ -83,7 +83,9 @@ const obtenerCotizacionConDetalles = async (req, res) => {
 
 const actualzizarDetallesCotizacion = async (req, res) => {
     try {
-        
+        const {detalles} = req.body; //id del detalleCotizacion, nota del admin y el precio
+
+        const [result] = await connection.promise().query("", {detalles});
     } catch (error) {
 
     }
