@@ -1,9 +1,10 @@
 const connection = require("../config/db");
 const { getIO } = require("../config/socket");
+const firebase = require("../config/firebase");
 
 const insertarRol = async (req,res) => {
     try{
-        const {nombre,descripcion} = req.body;
+        const {nombre,descripcion,token,titulo,mensaje} = req.body;
 
         if(!nombre || !descripcion){
             return res.status(400).json({mensaje: "Todos los campos son obligatorios"});
@@ -25,6 +26,7 @@ const insertarRol = async (req,res) => {
 
         const io = getIO();
         io.emit("nuevoRol", { id: results.insertId, nombre, descripcion });
+        firebase.enviarNotificacion(token,titulo,mensaje);
 
         res.status(201).json({
             mensaje: "Rol agregado exitosamente",

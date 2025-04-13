@@ -59,6 +59,14 @@ CREATE TABLE Clientes (
   PRIMARY KEY (ID)
 );
 
+CREATE TABLE Dispositivos(
+    ID INT AUTO_INCREMENT,
+    ID_Cliente INT,
+    Token VARCHAR(512),
+    PRIMARY KEY (ID),
+    FOREIGN KEY(ID_Cliente) REFERENCES Clientes(ID)
+);
+
 CREATE TABLE Ubicaciones (
   ID INT AUTO_INCREMENT,
   ID_Cliente INT,
