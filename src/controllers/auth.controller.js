@@ -3,7 +3,7 @@ const {verifyToken,checkRole,generateToken,verificarAcceso} = require("../middle
 
 const loginCliente = async (req, res) => {
     try {
-        const{correo,contrasena}= req.body;
+        const{correo,contrasena,device}= req.body;
 
         const [results] = await connection.promise().query(
             "CALL loginClientes(?)",
@@ -13,11 +13,22 @@ const loginCliente = async (req, res) => {
         if (!results[0] || results[0].length === 0) {
             return res.status(404).json({ mensaje: "Correo o contraseña incorrecto" });
         }
-
         const user = results[0][0];
+
+        const [devices] = await connection.promise().query(
+            "CALL obtenerDispositivosCliente(?,?)", [user.ID,device]	
+        );
+
+        if (!devices[0] || devices[0].length === 0) {
+            await connection.promise().query(
+                "CALL agregarDispositivo(?,?)", [user.ID,device]	
+            );
+        }
+
         if(user.Contraseña === contrasena) {
             const token = generateToken("30d",user,"C");
-            res.json({ token, id:user.ID,username: user.Nombre });
+            
+            res.json({ token, id:user.ID,username: user.Nombre,device:device});
         }else{
             res.status(404).json({ mensaje: "Contraseña incorrecta" });
         }

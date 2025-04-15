@@ -61,10 +61,18 @@ CREATE TABLE Clientes (
 
 CREATE TABLE Dispositivos(
     ID INT AUTO_INCREMENT,
-    ID_Cliente INT,
     Token VARCHAR(512),
+    PRIMARY KEY (ID)
+);
+
+CREATE TABLE ClienteDispositivo(
+    ID INT AUTO_INCREMENT,
+    ID_Cliente INT,
+    ID_Dispositivo INT,
+    Estado INT,
     PRIMARY KEY (ID),
-    FOREIGN KEY(ID_Cliente) REFERENCES Clientes(ID)
+    FOREIGN KEY(ID_Cliente) REFERENCES Clientes(ID),
+    FOREIGN KEY(ID_Dispositivo) REFERENCES Dispositivos(ID)
 );
 
 CREATE TABLE Ubicaciones (
@@ -283,6 +291,24 @@ BEGIN
     SELECT ID, Nombre,Contrasena
     FROM Clientes
     WHERE p_correo = Correo AND Estado = 1;
+END $$
+
+CREATE PROCEDURE obtenerDispositivosCliente(
+  IN p_id_cliente INT
+)
+BEGIN
+    SELECT token
+    FROM Dispositivos
+    WHERE ID_Cliente = p_id_cliente;
+END $$
+
+CREATE PROCEDURE agregarDispositivo(
+    IN p_id_cliente INT,
+    IN p_token VARCHAR(500)
+)
+BEGIN
+    INSERT INTO Dispositivos(ID_Cliente,Token)
+    VALUES(p_id_cliente,p_token);
 END $$
 
 CREATE PROCEDURE obtenerClientePorID(
@@ -745,6 +771,76 @@ BEGIN
     WHERE te.ID_Empleado = p_id_empleado AND (c.Estado = 3 OR c.Estado = 4)
     GROUP BY c.ID;
 END $$
+
+CREATE PROCEDURE empezarTrabajo(
+    IN p_idCotizacion INT
+)
+BEGIN
+    UPDATE Cotizaciones 
+    SET Estado = 4, Fecha_Modificacion = NOW()
+    WHERE ID = p_idCotizacion;
+END $$ 
+
+CREATE PROCEDURE obtenerDatosGeneralesTrabajo(
+    IN p_id_empleado INT,
+    IN p_id_cotizacion INT
+    
+)
+BEGIN
+    SELECT
+        CASE WHEN c.Modalidad = 1 THEN u.Latitud ELSE NULL END AS lat,
+        CASE WHEN c.Modalidad = 1 THEN u.Longitud ELSE NULL END AS lon,
+        ca.Placa AS placa,
+        ca.Color AS color, 
+        ma.Nombre AS marca,
+        cl.Nombre AS nombreCliente,
+        c.Modalidad AS modalidad
+    FROM TrabajoEmpleado te
+    INNER JOIN Trabajos t ON te.ID_Trabajo = t.ID
+    INNER JOIN CotizacionesDetalle cd ON t.ID_CotizacionDetalle = cd.ID
+    INNER JOIN Cotizaciones c ON cd.ID_Cotizaciones = c.ID
+    INNER JOIN Carros ca ON c.ID_Carro = ca.ID
+    INNER JOIN Marca ma ON ca.Modelo = ma.ID
+    INNER JOIN Clientes cl ON ca.ID_Cliente = cl.ID
+    LEFT JOIN Ubicaciones u ON c.ID_Ubicacion = u.ID
+    WHERE te.ID_Empleado = p_id_empleado AND c.ID = p_id_cotizacion
+    LIMIT 1;
+END $$
+
+CREATE PROCEDURE marcarTrabajoCompletado(
+    IN p_id_empleado INT,
+    IN p_id_trabajo INT
+)
+BEGIN
+   UPDATE Trabajos 
+    SET Estado = 2, Fecha_Modificacion = NOW()
+    WHERE ID = p_id_trabajo;
+END $$
+
+CREATE PROCEDURE obtenerServiciosDeTrabajo(
+    IN p_id_empleado INT,
+    IN p_id_cotizacion INT
+    
+)
+BEGIN
+    SELECT
+        t.ID AS id,
+        s.Servicio AS servicio,
+        cd.NotaAdmin AS notaAdministrador,
+        t.Estado AS estado,
+        (
+            SELECT COUNT(*)
+            FROM Evidencias e
+            WHERE e.ID_Trabajos = t.ID
+        ) AS contadorMultimedia
+    FROM TrabajoEmpleado te
+    INNER JOIN Trabajos t ON te.ID_Trabajo = t.ID
+    INNER JOIN CotizacionesDetalle cd ON t.ID_CotizacionDetalle = cd.ID
+    INNER JOIN Servicios s ON cd.ID_Servicios = s.ID
+    INNER JOIN Cotizaciones c ON cd.ID_Cotizaciones = c.ID
+    WHERE te.ID_Empleado = p_id_empleado AND c.ID = p_id_cotizacion;
+END $$
+
 
 
 /Mostrar la lista de trabajo por empleado/
