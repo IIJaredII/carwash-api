@@ -43,7 +43,7 @@ const revisarDetallesCotizacion = async (req, res) => {
    try{
         const {detalles} = req.body;
         const [result] = await connection.promise().query(
-            "CALL actualizarCotizacionDetalle(?)",{detalles}
+            "CALL actualizarCotizacionDetalle(?)",[detalles]
         );
         res.status(200)
     }catch (error) {
@@ -135,6 +135,67 @@ const marcarTrabajoCompletado = async (req, res) => {
     }
 }
 
+const subirEvidencia = async (req, res) => {
+    try {
+        const { idTrabajo, nota, idCotizacion } = req.body;
+        const archivo = req.file;
+
+        console.log(req.body);
+
+        if (!archivo) {
+            return res.status(400).json({ mensaje: "No se recibió ningún archivo." });
+        }
+
+        const nombreArchivo = archivo.filename;
+
+        await connection.promise().query(
+            "CALL guardarEvidencia(?,?,?)", 
+            [idTrabajo, nombreArchivo, nota]
+         );
+
+        const io = getIO();
+        io.emit("Trabajo-" + idCotizacion, { tipo: "evidenciaSubida" });
+
+        res.status(200).json({ mensaje: "Evidencia subida correctamente." });
+    } catch (error) {
+        console.error("Error al subir evidencia:", error);
+        res.status(500).json({ mensaje: "Error interno del servidor." });
+    }
+};
+
+const terminarTrabajo = async (req, res) => {
+    try {
+        const io = getIO();
+        const { id } = req.params;
+
+        console.log("ID del trabajo ", id);
+
+        const [resultSets] = await connection.promise().query(
+            "CALL terminarTrabajo(?)", [id]
+        );
+
+        const dispositivos = resultSets[0];
+        console.log("Dispositivos: ",dispositivos);
+
+        io.emit("Trabajos", { mensaje: "Se inició un trabajo", idTrabajo: id });
+
+        for (const dispositivo of dispositivos) {
+            const token = dispositivo.Token;
+            if (token) {
+                await firebase.enviarNotificacion(token, 
+                    "Trabajo Finalizado", 
+                    "Su vehiculo ya esta listo para recoger");
+                console.log("token: "+token);
+            }
+        }
+
+        res.status(200).json({ mensaje: "Trabajo iniciado correctamente" });
+    } catch (error) {
+        res.status(500).json({ error: "Error al empezar el trabajo" });
+        console.error(error);
+    }
+}
+
 module.exports = {
     obtenerTabajosPorCotizaciones,
     obtenerTabajoPorEmpleado,
@@ -142,5 +203,7 @@ module.exports = {
     emplezarTrabajo,
     obtenerDatosGeneralesTrabajo,
     obtenerServiciosDeTrabajo,
-    marcarTrabajoCompletado
+    marcarTrabajoCompletado,
+    subirEvidencia,
+    terminarTrabajo
 }

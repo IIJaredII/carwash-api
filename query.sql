@@ -294,21 +294,56 @@ BEGIN
 END $$
 
 CREATE PROCEDURE obtenerDispositivosCliente(
-  IN p_id_cliente INT
+    IN p_idCliente INT,
+    IN p_token VARCHAR(512)
 )
 BEGIN
-    SELECT token
-    FROM Dispositivos
-    WHERE ID_Cliente = p_id_cliente;
+    SELECT d.ID AS ID_Dispositivo, cd.ID AS ID_ClienteDispositivo
+    FROM Dispositivos d
+    JOIN ClienteDispositivo cd ON cd.ID_Dispositivo = d.ID
+    WHERE d.Token = p_token AND cd.ID_Cliente = p_idCliente AND cd.Estado = 1;
 END $$
 
 CREATE PROCEDURE agregarDispositivo(
-    IN p_id_cliente INT,
-    IN p_token VARCHAR(500)
+    IN p_idCliente INT,
+    IN p_token VARCHAR(512)
 )
 BEGIN
-    INSERT INTO Dispositivos(ID_Cliente,Token)
-    VALUES(p_id_cliente,p_token);
+    DECLARE v_idDispositivo INT;
+
+    SELECT ID INTO v_idDispositivo
+    FROM Dispositivos
+    WHERE Token = p_token
+    LIMIT 1;
+
+    IF v_idDispositivo IS NULL THEN
+        INSERT INTO Dispositivos(Token) VALUES (p_token);
+        SET v_idDispositivo = LAST_INSERT_ID();
+    END IF;
+
+    INSERT INTO ClienteDispositivo(ID_Cliente, ID_Dispositivo, Estado)
+    VALUES (p_idCliente, v_idDispositivo, 1);
+END $$ 
+
+CREATE PROCEDURE guardarUbicacion(
+    IN p_idCliente INT,
+    IN p_nombre VARCHAR(255),
+    IN p_referencia VARCHAR(255),
+    IN p_lon DOUBLE,
+    IN p_lat DOUBLE
+)
+BEGIN
+    INSERT INTO Ubicaciones(ID_Cliente,Nombre,Referencia, Longitud, Latitud, Estado)
+    VALUES (p_idCliente,p_nombre,p_referencia, p_lon, p_lat, 1);
+END $$
+
+CREATE PROCEDURE obtenerUbicaciones(
+     IN p_idCliente INT
+)
+BEGIN
+    SELECT ID,Nombre,Referencia,Longitud,Latitud
+    FROM Ubicaciones
+    WHERE ID_Cliente = p_idCliente AND Estado =1;
 END $$
 
 CREATE PROCEDURE obtenerClientePorID(
@@ -318,6 +353,23 @@ BEGIN
     SELECT ID, Nombre, Correo, Telefono, URL_FOTO, Estado, Fecha_Creacion, Fecha_Modificacion
     FROM Clientes
     WHERE ID = p_id AND Estado = 1;
+END $$
+
+
+CREATE PROCEDURE ObtenerCarrosPorCliente(
+    IN p_id_cliente INT
+)
+BEGIN
+    SELECT 
+    	c.ID AS id,
+        c.Año AS anio,
+        m.Nombre AS marca,
+        mo.Modelo AS modelo,
+        c.Placa AS placa
+    FROM Carros c
+    INNER JOIN Modelo mo ON c.Modelo = mo.ID
+    INNER JOIN Marca m ON mo.ID_Marca = m.ID
+    WHERE c.ID_Cliente = p_id_cliente AND c.Estado = 1 AND m.Estado = 1 AND mo.Estado = 1;
 END $$
 
 DELIMITER ;
@@ -605,6 +657,7 @@ DELIMITER $$
 
 CREATE PROCEDURE insertarCotizacion(
     IN p_idCliente INT,
+    IN p_modalidad INT,
     IN p_idCarro INT,
     IN p_descripcion TEXT,
     IN p_fecha_cita DATE,
@@ -618,8 +671,8 @@ BEGIN
     START TRANSACTION;
 
     -- Insertar en la tabla Cotizaciones (maestro)
-    INSERT INTO Cotizaciones (ID_Cliente, ID_Carro, Descripcion, Fecha_Cita,Estado)
-    VALUES (p_idCliente, p_idCarro, p_descripcion, p_fecha_cita,1);
+    INSERT INTO Cotizaciones (ID_Cliente, Modalidad, ID_Carro, Descripcion, Fecha_Cita,Estado)
+    VALUES (p_idCliente, p_modalidad,p_idCarro, p_descripcion, p_fecha_cita,1);
 
     -- Obtener el ID de la cotización recién insertada
     SET v_idCotizacion = LAST_INSERT_ID();
@@ -781,6 +834,28 @@ BEGIN
     WHERE ID = p_idCotizacion;
 END $$ 
 
+
+CREATE PROCEDURE terminarTrabajo(
+    IN p_idCotizacion INT
+)
+BEGIN
+
+    UPDATE Cotizaciones 
+    SET Estado = 5, Fecha_Modificacion = NOW()
+    WHERE ID = p_idCotizacion;
+
+    SELECT 
+        d.Token
+    FROM Cotizaciones cot
+    JOIN Clientes c ON cot.ID_Cliente = c.ID
+    JOIN ClienteDispositivo cd ON cd.ID_Cliente = c.ID AND cd.Estado = 1
+    JOIN Dispositivos d ON d.ID = cd.ID_Dispositivo
+    WHERE cot.ID = p_idCotizacion;
+
+END $$
+
+
+
 CREATE PROCEDURE obtenerDatosGeneralesTrabajo(
     IN p_id_empleado INT,
     IN p_id_cotizacion INT
@@ -815,6 +890,16 @@ BEGIN
    UPDATE Trabajos 
     SET Estado = 2, Fecha_Modificacion = NOW()
     WHERE ID = p_id_trabajo;
+END $$
+
+CREATE PROCEDURE guardarEvidencia(
+    IN p_id_trabajo INT,
+    IN p_nombre_archivo VARCHAR(300),
+    IN p_nota VARCHAR(255)
+)
+BEGIN
+    INSERT INTO Evidencias(ID_Trabajos INT, URL_Multimedia, Observacion)
+    VALUES (p_id_trabajo,p_nombre_archivo,p_nota);
 END $$
 
 CREATE PROCEDURE obtenerServiciosDeTrabajo(

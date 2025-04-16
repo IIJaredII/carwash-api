@@ -2,11 +2,11 @@ const connection = require("../config/db");
 
 const insertarCotizacion = async (req, res) => {
     try {
-        const { idCliente, idCarro, descripcion, fechaCita, detalles } = req.body;
+        const { idCliente,modalidad, idCarro, descripcion, fechaCita, detalles } = req.body;
         //detalles lleva esto: idServicio, notaCliente, precio
         const [result] = await connection.promise().query(
-            "CALL insertarCotizacion(?,?,?,?,?)",
-            [idCliente, idCarro, descripcion, fechaCita, JSON.stringify(detalles)]
+            "CALL insertarCotizacion(?,?,?,?,?,?)",
+            [idCliente,modalidad, idCarro, descripcion, fechaCita, JSON.stringify(detalles)]
         );
 
         res.status(201).json({

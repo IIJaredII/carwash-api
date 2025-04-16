@@ -2,9 +2,9 @@ const connection = require('../config/db');
 
 const insertarCarro = async (req,res) => {
     try{
-        const {idCliente, placa, modelo, year} = req.body;
+        const {idCliente, placa, modelo, year,color} = req.body;
         
-        if(!idCliente || !placa || !modelo || !year){
+        if(!idCliente || !placa || !modelo || !year || !color){
             return res.status(400).json({mensaje: "Todos los campos son obligatorios"})
         }
 
@@ -14,7 +14,7 @@ const insertarCarro = async (req,res) => {
             return res.status(409).json({mensaje: "El carro ya está registrado"});
         }
 
-        const results = await connection.promise().query("CALL RegistrarCarro(?,?,?,?)",[idCliente,placa,modelo,year]);
+        const results = await connection.promise().query("CALL RegistrarCarro(?,?,?,?,?)",[idCliente,placa,modelo,year,color]);
 
         res.status(201).json({mensaje: "Carro insertado exitosamente",
             id: results.insertId
@@ -28,15 +28,15 @@ const insertarCarro = async (req,res) => {
 
 const obtenerCarroPorIdCliente = async (req,res) => {
     try{
-        const {id} = req.body;
+        const idCliente = req.user.id;
     
-        const [results] = await connection.promise().query("CALL ObtenerCarrosPorCliente(?)",[id]);
+        const [results] = await connection.promise().query("CALL ObtenerCarrosPorCliente(?)",[idCliente]);
 
         if(!results[0] || results[0].length === 0){
             return res.status(404).json({mensaje: "Carro no encontrado"});
         }
 
-        res.json(results[0]);
+        res.status(200).json(results[0]);
 
     }catch(error){
         console.error("Error al obtener carro por id cliente: ",error);
@@ -146,6 +146,42 @@ const obtenerMarcas = async (req,res) => {
     }
 }
 
+const obtenerMarcasConModelos = async (req, res) => {
+    try {
+        const [rows] = await connection.promise().query("CALL obtenerMarcasConModelos()");
+
+        const data = rows[0];
+
+        const marcas = {};
+
+        data.forEach(row => {
+            const { id_marca, nombre_marca, id_modelo, nombre_modelo } = row;
+
+            if (!marcas[id_marca]) {
+                marcas[id_marca] = {
+                    id: id_marca,
+                    nombre: nombre_marca,
+                    modelos: []
+                };
+            }
+
+            marcas[id_marca].modelos.push({
+                id: id_modelo,
+                nombre: nombre_modelo
+            });
+        });
+
+        const resultadoFinal = Object.values(marcas);
+
+        return res.status(200).json(resultadoFinal);
+
+    } catch (error) {
+        console.error("Error al obtener marcas con modelos:", error);
+        return res.status(500).json({ mensaje: "Error al obtener marcas con modelos" });
+    }
+};
+
+
 module.exports = {
     insertarCarro,
     obtenerCarroPorIdCliente,
@@ -154,5 +190,6 @@ module.exports = {
     actualizarCarro,
     eliminarCarro,
     obtenerModeloPorIdMarca,
-    obtenerMarcas
+    obtenerMarcas,
+    obtenerMarcasConModelos
 }
