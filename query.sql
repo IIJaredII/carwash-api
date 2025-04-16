@@ -359,12 +359,14 @@ END $$
 CREATE PROCEDURE ObtenerCarrosPorCliente(
     IN p_id_cliente INT
 )
+
 BEGIN
     SELECT 
     	c.ID AS id,
         c.Año AS anio,
         m.Nombre AS marca,
         mo.Modelo AS modelo,
+        c.Color AS color,
         c.Placa AS placa
     FROM Carros c
     INNER JOIN Modelo mo ON c.Modelo = mo.ID
@@ -803,6 +805,67 @@ END $$
 
 DELIMITER ;
 
+DELIMITER $$
+
+CREATE PROCEDURE obtenerCotizacionDetallePendiente(
+    IN p_id_cotizacion INT
+)
+BEGIN
+    SELECT 
+        c.ID, 
+        c.Modalidad, 
+        u.Latitud, 
+        u.Longitud, 
+        car.Placa,
+        car.Año,
+        car.Color,
+        mar.Nombre AS Marca,
+        m.Modelo,
+        s.Servicio, 
+        cd.Precio, 
+        cd.NotaCliente,
+        cd.NotaAdmin
+    FROM cotizaciones c
+    INNER JOIN cotizacionesdetalle cd ON cd.ID_Cotizaciones = c.ID
+    INNER JOIN carros car ON car.ID = c.ID_Carro
+    INNER JOIN modelo m ON m.ID = car.Modelo
+    INNER JOIN marca mar ON mar.ID = m.ID_Marca
+    INNER JOIN servicios s ON s.ID = cd.ID_Servicios
+    INNER JOIN ubicaciones u ON u.ID = c.ID_Ubicacion
+    WHERE c.ID = p_id_cotizacion AND c.Estado = 3;
+END $$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE obtenerCotizacionesPendientes()
+BEGIN
+    SELECT 
+        c.ID, 
+        c.Modalidad, 
+        c.Fecha_Cita, 
+        c.Total
+    FROM cotizaciones c
+    WHERE c.Estado = 3;
+END $$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE actualizarRechazarAceptarCotizacionPendiente(
+    IN p_id_estado INT,
+    IN p_id_cotizacion INT
+)
+BEGIN
+    UPDATE cotizaciones 
+    SET Estado = p_id_estado
+    WHERE ID = p_id_cotizacion;
+END $$
+
+DELIMITER ;
+
 DELIMITER &&
 
 /Mostrar la cotizacion por empleado/
@@ -925,42 +988,6 @@ BEGIN
     INNER JOIN Cotizaciones c ON cd.ID_Cotizaciones = c.ID
     WHERE te.ID_Empleado = p_id_empleado AND c.ID = p_id_cotizacion;
 END $$
-
-
-
-/Mostrar la lista de trabajo por empleado/
-SELECT
-    t.ID AS ID_Trabajo,
-    s.Servicio,
-    cd.NotaAdmin,
-    cd.NotaCliente,
-    t.Estado /no estoy segura del estado que se va a cambiar/
-FROM TrabajoEmpleado te
-INNER JOIN Trabajos t ON te.ID_Trabajo = t.ID
-INNER JOIN CotizacionesDetalle cd ON t.ID_CotizacionDetalle = cd.ID
-INNER JOIN Cotizaciones c ON cd.ID_Cotizaciones = c.ID
-INNER JOIN Servicios s ON cd.ID_Servicios = s.ID
-WHERE te.ID_Empleado = 2;
-
-SELECT
-    cl.ID AS ID_Cliente,
-    cl.Telefono,
-    car.Placa,
-    car.Anio,
-    m.Modelo,
-    u.Longitud,
-    u.Latitud,
-    u.Referencia
-FROM TrabajoEmpleado te
-INNER JOIN Trabajos t ON te.ID_Trabajo = t.ID
-INNER JOIN CotizacionesDetalle cd ON t.ID_CotizacionDetalle = cd.ID
-INNER JOIN Cotizaciones c ON cd.ID_Cotizaciones = c.ID
-INNER JOIN Clientes cl ON c.ID_Cliente = cl.ID
-INNER JOIN Carros car ON c.ID_Carro = car.ID
-INNER JOIN Modelo m ON car.Modelo= m.ID
-LEFT JOIN Ubicaciones u ON c.ID_Ubicacion = u.ID 
-WHERE te.ID_Empleado = 2 AND c.ID = 1
-LIMIT 1;
 
 DELIMITER ;
 

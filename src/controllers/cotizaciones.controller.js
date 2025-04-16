@@ -2,7 +2,8 @@ const connection = require("../config/db");
 
 const insertarCotizacion = async (req, res) => {
     try {
-        const { idCliente,modalidad, idCarro, descripcion, fechaCita, detalles } = req.body;
+        const idCliente = req.user.id;
+        const {modalidad, idCarro, descripcion, fechaCita, detalles } = req.body;
         //detalles lleva esto: idServicio, notaCliente, precio
         const [result] = await connection.promise().query(
             "CALL insertarCotizacion(?,?,?,?,?,?)",
@@ -88,6 +89,16 @@ const actualzizarDetallesCotizacion = async (req, res) => {
         const [result] = await connection.promise().query("", {detalles});
     } catch (error) {
 
+    }
+}
+
+const obtenerCotizacionDetallePendiente = async (req, res) => {
+    try {
+        const {idCotizacion} = req.params;
+
+        const [result]= await connection.promise().query("",);
+    } catch (error) {
+        
     }
 }
 

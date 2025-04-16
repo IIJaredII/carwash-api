@@ -1,6 +1,6 @@
 import { verificarAcceso } from "./verificarToken.js";
 let token = "";
-const url = "http://localhost:3000/api/";
+const url = "https://hmqphld5-3000.use2.devtunnels.ms/api/";
 let data = [];
 let categorias =[]; 
 

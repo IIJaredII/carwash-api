@@ -5,7 +5,7 @@ let detalles = [];
 
 document.addEventListener("DOMContentLoaded", async () => {
     verificarAccesoYRedirigir();
-    cambiarFormulario(1);
+    cambiarFormulario(2);
 });
 
 
@@ -80,7 +80,7 @@ function llenarTablaCotizacionesTrabajos(){
   
       fila.addEventListener("click", () => {
         document.getElementById("notaCliente").value = item.nota;
-        document.getElementById("precioCliente").value = item.precio;
+        document.getElementById("precioBase").value = item.precio;
       });
   
       tbodyTrabajos.appendChild(fila);
@@ -112,7 +112,7 @@ function llenarTablaDetallesConEventos() {
   
       fila.addEventListener("click", () => {
         document.getElementById("notaCliente").value = item.nota;
-        document.getElementById("precioCliente").value = item.precio;
+        document.getElementById("precioBase").value = item.precio;
       });
   
       tbody.appendChild(fila);
