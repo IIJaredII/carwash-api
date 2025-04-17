@@ -18,26 +18,20 @@ async function verificarAccesoYRedirigir() {
     }
 }
 
-const socket = io(urlBase);  // Asegúrate de que el puerto coincide con tu servidor
+const socket = io(urlBase);
 
-// Escuchar el evento "nuevoRol"
 socket.on("nuevoRol", (data) => {
   console.log("Nuevo rol agregado:", data);
-  // Actualiza la lista de roles en el frontend
-  obtenerRoles();  // Función que ya tienes para obtener roles
-});
-
-// Escuchar el evento "rolActualizado"
-socket.on("rolActualizado", (data) => {
-  console.log("Rol actualizado:", data);
-  // Actualiza la lista de roles en el frontend
   obtenerRoles();
 });
 
-// Escuchar el evento "rolEliminado"
+socket.on("rolActualizado", (data) => {
+  console.log("Rol actualizado:", data);
+  obtenerRoles();
+});
+
 socket.on("rolEliminado", (data) => {
   console.log("Rol eliminado:", data);
-  // Actualiza la lista de roles en el frontend
   obtenerRoles();
 });
 
