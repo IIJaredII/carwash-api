@@ -3,7 +3,7 @@ const router = express.Router();
 const carroController = require('../controllers/carro.controller');
 const {verifyToken,checkRole} = require("../middlewares/authConfig");
 
-router.post('/',carroController.insertarCarro);
+router.post('/',verifyToken,carroController.insertarCarro);
 router.get('/idCliente',verifyToken,carroController.obtenerCarroPorIdCliente);
 router.get('/id',carroController.obtenerCarroPorId);
 router.get('/',carroController.obtenerCarros);

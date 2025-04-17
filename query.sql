@@ -1008,6 +1008,28 @@ END $$
 
 DELIMITER ;
 
+DELIMITER $$
+
+CREATE TRIGGER crear_trabajos_al_aprobar_cotizacion
+AFTER UPDATE ON Cotizaciones
+FOR EACH ROW
+BEGIN
+    IF NEW.Estado = 3 AND OLD.Estado <> 3 THEN
+
+        INSERT INTO Trabajos (ID_CotizacionDetalle, Estado, Fecha_Creacion)
+        SELECT 
+            cd.ID,
+            1, 
+            NOW()
+        FROM CotizacionesDetalle cd
+        WHERE cd.ID_Cotizaciones = NEW.ID;
+
+    END IF;
+END$$
+
+DELIMITER ;
+
+
 
 -- Llenar la tabla de Marcas utilizados en Honduras
 INSERT INTO Marca (Nombre, Estado, Fecha_Creacion, Fecha_Modificacion) VALUES

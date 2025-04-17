@@ -94,13 +94,60 @@ const actualzizarDetallesCotizacion = async (req, res) => {
 
 const obtenerCotizacionDetallePendiente = async (req, res) => {
     try {
-        const {idCotizacion} = req.params;
+        const idCliente = req.user.id;
+        const { idCotizacion } = req.params;
 
-        const [result]= await connection.promise().query("",);
+        const [result] = await connection.promise().query(
+            "CALL obtenerCotizacionDetallePendiente(?, ?)",
+            [idCotizacion, idCliente]
+        );
+
+        const data = result[0];
+
+        if (!data.length) {
+            return res.status(404).json({ mensaje: "No se encontró la cotización." });
+        }
+        const {
+            ID,
+            Modalidad,
+            Latitud,
+            Longitud,
+            Placa,
+            Año,
+            Color,
+            Marca,
+            Modelo
+        } = data[0];
+
+        const servicios = data.map(row => ({
+            servicio: row.Servicio,
+            precio: row.Precio,
+            notaCliente: row.NotaCliente,
+            notaAdmin: row.NotaAdmin
+        }));
+
+        const cotizacion = {
+            id: ID,
+            modalidad: Modalidad,
+            latitud: Latitud,
+            longitud: Longitud,
+            placa: Placa,
+            año: Año,
+            color: Color,
+            marca: Marca,
+            modelo: Modelo,
+            servicios
+        };
+
+        res.json(cotizacion);
+
     } catch (error) {
-        
+        console.error("Error al obtener cotización:", error);
+        res.status(500).json({ mensaje: "Error interno del servidor." });
     }
-}
+};
+
+
 
 
 
@@ -108,4 +155,5 @@ module.exports = {
     insertarCotizacion,
     obtenerCotizacionConDetalles,
     obtenerCotizacionesPorEstado,
+    obtenerCotizacionDetallePendiente,
 }

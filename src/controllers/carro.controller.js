@@ -2,7 +2,8 @@ const connection = require('../config/db');
 
 const insertarCarro = async (req,res) => {
     try{
-        const {idCliente, placa, modelo, year,color} = req.body;
+        const idCliente = req.user.id;
+        const { placa, modelo, year,color} = req.body;
         
         if(!idCliente || !placa || !modelo || !year || !color){
             return res.status(400).json({mensaje: "Todos los campos son obligatorios"})
