@@ -2,11 +2,12 @@ const connection = require("../config/db");
 
 const insertarCotizacion = async (req, res) => {
     try {
-        const { idCliente, idCarro, descripcion, fechaCita, detalles } = req.body;
+        const idCliente = req.user.id;
+        const {modalidad, idCarro, descripcion, fechaCita, detalles } = req.body;
         //detalles lleva esto: idServicio, notaCliente, precio
         const [result] = await connection.promise().query(
-            "CALL insertarCotizacion(?,?,?,?,?)",
-            [idCliente, idCarro, descripcion, fechaCita, JSON.stringify(detalles)]
+            "CALL insertarCotizacion(?,?,?,?,?,?)",
+            [idCliente,modalidad, idCarro, descripcion, fechaCita, JSON.stringify(detalles)]
         );
 
         res.status(201).json({
@@ -83,11 +84,70 @@ const obtenerCotizacionConDetalles = async (req, res) => {
 
 const actualzizarDetallesCotizacion = async (req, res) => {
     try {
-        
+        const {detalles} = req.body; //id del detalleCotizacion, nota del admin y el precio
+
+        const [result] = await connection.promise().query("", {detalles});
     } catch (error) {
 
     }
 }
+
+const obtenerCotizacionDetallePendiente = async (req, res) => {
+    try {
+        const idCliente = req.user.id;
+        const { idCotizacion } = req.params;
+
+        const [result] = await connection.promise().query(
+            "CALL obtenerCotizacionDetallePendiente(?, ?)",
+            [idCotizacion, idCliente]
+        );
+
+        const data = result[0];
+
+        if (!data.length) {
+            return res.status(404).json({ mensaje: "No se encontró la cotización." });
+        }
+        const {
+            ID,
+            Modalidad,
+            Latitud,
+            Longitud,
+            Placa,
+            Año,
+            Color,
+            Marca,
+            Modelo
+        } = data[0];
+
+        const servicios = data.map(row => ({
+            servicio: row.Servicio,
+            precio: row.Precio,
+            notaCliente: row.NotaCliente,
+            notaAdmin: row.NotaAdmin
+        }));
+
+        const cotizacion = {
+            id: ID,
+            modalidad: Modalidad,
+            latitud: Latitud,
+            longitud: Longitud,
+            placa: Placa,
+            año: Año,
+            color: Color,
+            marca: Marca,
+            modelo: Modelo,
+            servicios
+        };
+
+        res.json(cotizacion);
+
+    } catch (error) {
+        console.error("Error al obtener cotización:", error);
+        res.status(500).json({ mensaje: "Error interno del servidor." });
+    }
+};
+
+
 
 
 
@@ -95,4 +155,5 @@ module.exports = {
     insertarCotizacion,
     obtenerCotizacionConDetalles,
     obtenerCotizacionesPorEstado,
+    obtenerCotizacionDetallePendiente,
 }

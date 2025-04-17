@@ -1,13 +1,8 @@
 import { verificarAcceso } from "./verificarToken.js";
 let token = "";
-const url="http://localhost:3000/api/";
+const urlBase ="https://hmqphld5-3000.use2.devtunnels.ms/";
+const url=urlBase+"api/";
 let data = []; 
-
-document.addEventListener("DOMContentLoaded", async () => {
-    verificarAccesoYRedirigir();
-    obtenerRoles();
-    cambiarFormulario(1); 
-});
 
 async function verificarAccesoYRedirigir() {
     if (localStorage.getItem("token")) {
@@ -22,6 +17,24 @@ async function verificarAccesoYRedirigir() {
         window.location.href = "/";
     }
 }
+
+const socket = io(urlBase);
+
+socket.on("nuevoRol", (data) => {
+  console.log("Nuevo rol agregado:", data);
+  obtenerRoles();
+});
+
+socket.on("rolActualizado", (data) => {
+  console.log("Rol actualizado:", data);
+  obtenerRoles();
+});
+
+socket.on("rolEliminado", (data) => {
+  console.log("Rol eliminado:", data);
+  obtenerRoles();
+});
+
 
 const obtenerRoles = async () => {
     try {
@@ -214,3 +227,9 @@ window.eliminarCategoria = eliminarRol;
 window.cambiarFormulario = cambiarFormulario;
 window.verRol = verRol;
 window.obtenerRoles = obtenerRoles;
+
+document.addEventListener("DOMContentLoaded", async () => {
+    verificarAccesoYRedirigir();
+    obtenerRoles();
+    cambiarFormulario(1); 
+});

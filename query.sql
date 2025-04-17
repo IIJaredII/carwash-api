@@ -59,6 +59,22 @@ CREATE TABLE Clientes (
   PRIMARY KEY (ID)
 );
 
+CREATE TABLE Dispositivos(
+    ID INT AUTO_INCREMENT,
+    Token VARCHAR(512),
+    PRIMARY KEY (ID)
+);
+
+CREATE TABLE ClienteDispositivo(
+    ID INT AUTO_INCREMENT,
+    ID_Cliente INT,
+    ID_Dispositivo INT,
+    Estado INT,
+    PRIMARY KEY (ID),
+    FOREIGN KEY(ID_Cliente) REFERENCES Clientes(ID),
+    FOREIGN KEY(ID_Dispositivo) REFERENCES Dispositivos(ID)
+);
+
 CREATE TABLE Ubicaciones (
   ID INT AUTO_INCREMENT,
   ID_Cliente INT,
@@ -277,6 +293,59 @@ BEGIN
     WHERE p_correo = Correo AND Estado = 1;
 END $$
 
+CREATE PROCEDURE obtenerDispositivosCliente(
+    IN p_idCliente INT,
+    IN p_token VARCHAR(512)
+)
+BEGIN
+    SELECT d.ID AS ID_Dispositivo, cd.ID AS ID_ClienteDispositivo
+    FROM Dispositivos d
+    JOIN ClienteDispositivo cd ON cd.ID_Dispositivo = d.ID
+    WHERE d.Token = p_token AND cd.ID_Cliente = p_idCliente AND cd.Estado = 1;
+END $$
+
+CREATE PROCEDURE agregarDispositivo(
+    IN p_idCliente INT,
+    IN p_token VARCHAR(512)
+)
+BEGIN
+    DECLARE v_idDispositivo INT;
+
+    SELECT ID INTO v_idDispositivo
+    FROM Dispositivos
+    WHERE Token = p_token
+    LIMIT 1;
+
+    IF v_idDispositivo IS NULL THEN
+        INSERT INTO Dispositivos(Token) VALUES (p_token);
+        SET v_idDispositivo = LAST_INSERT_ID();
+    END IF;
+
+    INSERT INTO ClienteDispositivo(ID_Cliente, ID_Dispositivo, Estado)
+    VALUES (p_idCliente, v_idDispositivo, 1);
+END $$ 
+
+CREATE PROCEDURE guardarUbicacion(
+    IN p_idCliente INT,
+    IN p_nombre VARCHAR(255),
+    IN p_referencia VARCHAR(255),
+    IN p_lon DOUBLE,
+    IN p_lat DOUBLE
+)
+BEGIN
+    INSERT INTO Ubicaciones(ID_Cliente,Nombre,Referencia, Longitud, Latitud, Estado)
+    VALUES (p_idCliente,p_nombre,p_referencia, p_lon, p_lat, 1);
+END $$
+
+CREATE PROCEDURE obtenerUbicaciones(
+     IN p_idCliente INT
+)
+BEGIN
+    SELECT ID,Nombre,Referencia,Longitud,Latitud
+    FROM Ubicaciones
+    WHERE ID_Cliente = p_idCliente AND Estado =1;
+END $$
+
 CREATE PROCEDURE obtenerClientePorID(
     IN p_id INT
 )
@@ -284,6 +353,25 @@ BEGIN
     SELECT ID, Nombre, Correo, Telefono, URL_FOTO, Estado, Fecha_Creacion, Fecha_Modificacion
     FROM Clientes
     WHERE ID = p_id AND Estado = 1;
+END $$
+
+
+CREATE PROCEDURE ObtenerCarrosPorCliente(
+    IN p_id_cliente INT
+)
+
+BEGIN
+    SELECT 
+    	c.ID AS id,
+        c.Año AS anio,
+        m.Nombre AS marca,
+        mo.Modelo AS modelo,
+        c.Color AS color,
+        c.Placa AS placa
+    FROM Carros c
+    INNER JOIN Modelo mo ON c.Modelo = mo.ID
+    INNER JOIN Marca m ON mo.ID_Marca = m.ID
+    WHERE c.ID_Cliente = p_id_cliente AND c.Estado = 1 AND m.Estado = 1 AND mo.Estado = 1;
 END $$
 
 DELIMITER ;
@@ -571,6 +659,7 @@ DELIMITER $$
 
 CREATE PROCEDURE insertarCotizacion(
     IN p_idCliente INT,
+    IN p_modalidad INT,
     IN p_idCarro INT,
     IN p_descripcion TEXT,
     IN p_fecha_cita DATE,
@@ -584,8 +673,8 @@ BEGIN
     START TRANSACTION;
 
     -- Insertar en la tabla Cotizaciones (maestro)
-    INSERT INTO Cotizaciones (ID_Cliente, ID_Carro, Descripcion, Fecha_Cita,Estado)
-    VALUES (p_idCliente, p_idCarro, p_descripcion, p_fecha_cita,1);
+    INSERT INTO Cotizaciones (ID_Cliente, Modalidad, ID_Carro, Descripcion, Fecha_Cita,Estado)
+    VALUES (p_idCliente, p_modalidad,p_idCarro, p_descripcion, p_fecha_cita,1);
 
     -- Obtener el ID de la cotización recién insertada
     SET v_idCotizacion = LAST_INSERT_ID();
@@ -716,61 +805,189 @@ END $$
 
 DELIMITER ;
 
+DELIMITER $$
+
+CREATE PROCEDURE obtenerCotizacionDetallePendiente(
+    IN p_id_cotizacion INT
+)
+BEGIN
+    SELECT 
+        c.ID, 
+        c.Modalidad, 
+        u.Latitud, 
+        u.Longitud, 
+        car.Placa,
+        car.Año,
+        car.Color,
+        mar.Nombre AS Marca,
+        m.Modelo,
+        s.Servicio, 
+        cd.Precio, 
+        cd.NotaCliente,
+        cd.NotaAdmin
+    FROM cotizaciones c
+    INNER JOIN cotizacionesdetalle cd ON cd.ID_Cotizaciones = c.ID
+    INNER JOIN carros car ON car.ID = c.ID_Carro
+    INNER JOIN modelo m ON m.ID = car.Modelo
+    INNER JOIN marca mar ON mar.ID = m.ID_Marca
+    INNER JOIN servicios s ON s.ID = cd.ID_Servicios
+    INNER JOIN ubicaciones u ON u.ID = c.ID_Ubicacion
+    WHERE c.ID = p_id_cotizacion AND c.Estado = 3;
+END $$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE obtenerCotizacionesPendientes()
+BEGIN
+    SELECT 
+        c.ID, 
+        c.Modalidad, 
+        c.Fecha_Cita, 
+        c.Total
+    FROM cotizaciones c
+    WHERE c.Estado = 3;
+END $$
+
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE PROCEDURE actualizarRechazarAceptarCotizacionPendiente(
+    IN p_id_estado INT,
+    IN p_id_cotizacion INT
+)
+BEGIN
+    UPDATE cotizaciones 
+    SET Estado = p_id_estado
+    WHERE ID = p_id_cotizacion;
+END $$
+
+DELIMITER ;
+
 DELIMITER &&
 
 /Mostrar la cotizacion por empleado/
 
-CREATE PROCEDURE obtenerTabajoDeEmpleado(
-    IN p_id_empleado
+CREATE PROCEDURE obtenerTrabajoDeEmpleado(
+    IN p_id_empleado INT
 )
 BEGIN
-SELECT
-    c.ID AS ID_Cotizacion,
-    DATE(c.Fecha_Cita) AS Fecha,
-    TIME(c.Fecha_Cita) AS Hora,
-    c.Estado,
-    c.Modalidad
-FROM TrabajoEmpleado te
-INNER JOIN Trabajos t ON te.ID_Trabajo = t.ID
-INNER JOIN CotizacionesDetalle cd ON t.ID_CotizacionDetalle = cd.ID
-INNER JOIN Cotizaciones c ON cd.ID_Cotizaciones = c.ID
-WHERE te.ID_Empleado = p_id_empleado
-GROUP BY c.ID;
+    SELECT
+        c.ID AS id,
+        DATE(c.Fecha_Cita) AS fechaCita,
+        TIME(c.Fecha_Cita) AS horaTrabajo,
+        c.Estado AS estado,
+        c.Modalidad AS modalidad
+    FROM TrabajoEmpleado te
+    INNER JOIN Trabajos t ON te.ID_Trabajo = t.ID
+    INNER JOIN CotizacionesDetalle cd ON t.ID_CotizacionDetalle = cd.ID
+    INNER JOIN Cotizaciones c ON cd.ID_Cotizaciones = c.ID
+    WHERE te.ID_Empleado = p_id_empleado AND (c.Estado = 3 OR c.Estado = 4)
+    GROUP BY c.ID;
 END $$
 
-/Mostrar la lista de trabajo por empleado/
-SELECT
-    t.ID AS ID_Trabajo,
-    s.Servicio,
-    cd.NotaAdmin,
-    cd.NotaCliente,
-    t.Estado /no estoy segura del estado que se va a cambiar/
-FROM TrabajoEmpleado te
-INNER JOIN Trabajos t ON te.ID_Trabajo = t.ID
-INNER JOIN CotizacionesDetalle cd ON t.ID_CotizacionDetalle = cd.ID
-INNER JOIN Cotizaciones c ON cd.ID_Cotizaciones = c.ID
-INNER JOIN Servicios s ON cd.ID_Servicios = s.ID
-WHERE te.ID_Empleado = 2;
+CREATE PROCEDURE empezarTrabajo(
+    IN p_idCotizacion INT
+)
+BEGIN
+    UPDATE Cotizaciones 
+    SET Estado = 4, Fecha_Modificacion = NOW()
+    WHERE ID = p_idCotizacion;
+END $$ 
 
-SELECT
-    cl.ID AS ID_Cliente,
-    cl.Telefono,
-    car.Placa,
-    car.Anio,
-    m.Modelo,
-    u.Longitud,
-    u.Latitud,
-    u.Referencia
-FROM TrabajoEmpleado te
-INNER JOIN Trabajos t ON te.ID_Trabajo = t.ID
-INNER JOIN CotizacionesDetalle cd ON t.ID_CotizacionDetalle = cd.ID
-INNER JOIN Cotizaciones c ON cd.ID_Cotizaciones = c.ID
-INNER JOIN Clientes cl ON c.ID_Cliente = cl.ID
-INNER JOIN Carros car ON c.ID_Carro = car.ID
-INNER JOIN Modelo m ON car.Modelo= m.ID
-LEFT JOIN Ubicaciones u ON c.ID_Ubicacion = u.ID 
-WHERE te.ID_Empleado = 2 AND c.ID = 1
-LIMIT 1;
+
+CREATE PROCEDURE terminarTrabajo(
+    IN p_idCotizacion INT
+)
+BEGIN
+
+    UPDATE Cotizaciones 
+    SET Estado = 5, Fecha_Modificacion = NOW()
+    WHERE ID = p_idCotizacion;
+
+    SELECT 
+        d.Token
+    FROM Cotizaciones cot
+    JOIN Clientes c ON cot.ID_Cliente = c.ID
+    JOIN ClienteDispositivo cd ON cd.ID_Cliente = c.ID AND cd.Estado = 1
+    JOIN Dispositivos d ON d.ID = cd.ID_Dispositivo
+    WHERE cot.ID = p_idCotizacion;
+
+END $$
+
+
+
+CREATE PROCEDURE obtenerDatosGeneralesTrabajo(
+    IN p_id_empleado INT,
+    IN p_id_cotizacion INT
+    
+)
+BEGIN
+    SELECT
+        CASE WHEN c.Modalidad = 1 THEN u.Latitud ELSE NULL END AS lat,
+        CASE WHEN c.Modalidad = 1 THEN u.Longitud ELSE NULL END AS lon,
+        ca.Placa AS placa,
+        ca.Color AS color, 
+        ma.Nombre AS marca,
+        cl.Nombre AS nombreCliente,
+        c.Modalidad AS modalidad
+    FROM TrabajoEmpleado te
+    INNER JOIN Trabajos t ON te.ID_Trabajo = t.ID
+    INNER JOIN CotizacionesDetalle cd ON t.ID_CotizacionDetalle = cd.ID
+    INNER JOIN Cotizaciones c ON cd.ID_Cotizaciones = c.ID
+    INNER JOIN Carros ca ON c.ID_Carro = ca.ID
+    INNER JOIN Marca ma ON ca.Modelo = ma.ID
+    INNER JOIN Clientes cl ON ca.ID_Cliente = cl.ID
+    LEFT JOIN Ubicaciones u ON c.ID_Ubicacion = u.ID
+    WHERE te.ID_Empleado = p_id_empleado AND c.ID = p_id_cotizacion
+    LIMIT 1;
+END $$
+
+CREATE PROCEDURE marcarTrabajoCompletado(
+    IN p_id_empleado INT,
+    IN p_id_trabajo INT
+)
+BEGIN
+   UPDATE Trabajos 
+    SET Estado = 2, Fecha_Modificacion = NOW()
+    WHERE ID = p_id_trabajo;
+END $$
+
+CREATE PROCEDURE guardarEvidencia(
+    IN p_id_trabajo INT,
+    IN p_nombre_archivo VARCHAR(300),
+    IN p_nota VARCHAR(255)
+)
+BEGIN
+    INSERT INTO Evidencias(ID_Trabajos INT, URL_Multimedia, Observacion)
+    VALUES (p_id_trabajo,p_nombre_archivo,p_nota);
+END $$
+
+CREATE PROCEDURE obtenerServiciosDeTrabajo(
+    IN p_id_empleado INT,
+    IN p_id_cotizacion INT
+    
+)
+BEGIN
+    SELECT
+        t.ID AS id,
+        s.Servicio AS servicio,
+        cd.NotaAdmin AS notaAdministrador,
+        t.Estado AS estado,
+        (
+            SELECT COUNT(*)
+            FROM Evidencias e
+            WHERE e.ID_Trabajos = t.ID
+        ) AS contadorMultimedia
+    FROM TrabajoEmpleado te
+    INNER JOIN Trabajos t ON te.ID_Trabajo = t.ID
+    INNER JOIN CotizacionesDetalle cd ON t.ID_CotizacionDetalle = cd.ID
+    INNER JOIN Servicios s ON cd.ID_Servicios = s.ID
+    INNER JOIN Cotizaciones c ON cd.ID_Cotizaciones = c.ID
+    WHERE te.ID_Empleado = p_id_empleado AND c.ID = p_id_cotizacion;
+END $$
 
 DELIMITER ;
 
@@ -790,6 +1007,28 @@ END $$
 
 
 DELIMITER ;
+
+DELIMITER $$
+
+CREATE TRIGGER crear_trabajos_al_aprobar_cotizacion
+AFTER UPDATE ON Cotizaciones
+FOR EACH ROW
+BEGIN
+    IF NEW.Estado = 3 AND OLD.Estado <> 3 THEN
+
+        INSERT INTO Trabajos (ID_CotizacionDetalle, Estado, Fecha_Creacion)
+        SELECT 
+            cd.ID,
+            1, 
+            NOW()
+        FROM CotizacionesDetalle cd
+        WHERE cd.ID_Cotizaciones = NEW.ID;
+
+    END IF;
+END$$
+
+DELIMITER ;
+
 
 
 -- Llenar la tabla de Marcas utilizados en Honduras
@@ -868,3 +1107,17 @@ INSERT INTO Modelo (ID_Marca, Modelo, Estado, Fecha_Creacion, Fecha_Modificacion
 /*Triggers*/
 
 /*Vistas*/
+
+/*
+1.sin revisar 
+
+2. revisado
+
+3. Aceptado 
+
+4. en proceso
+
+5.Finalizado 
+
+6.Rechazado
+*/

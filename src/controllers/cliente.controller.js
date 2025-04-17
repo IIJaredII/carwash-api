@@ -84,7 +84,7 @@ const insertarCliente = async (req, res) => {
             }
         }
 
-        res.status(500).json({ mensaje: "Error al insertar cliente" });
+        res.status(500).json({ mensaje: "Error al insertar cliente", error });
     }
 };
 
@@ -164,13 +164,47 @@ const obtenerClientePorID = async (req, res) => {
     }
 };
 
+const guardarUbicacion = async (req, res) => {
+    try{
+        const idCliente =req.user.id;
+        const {nombre,referencia,lon,lat} = req.body;
+
+        const [result] = await connection.promise().query(
+            "CALL guardarUbicacion(?,?,?,?,?)",[idCliente,nombre,referencia,lon,lat]
+        );
+        
+        res.status(200).json({mensaje:"Ubicacion guardada exitosamente"});
+    }catch(error) {
+        console.error("Error al obtener las : ",error);
+        res.status(500).json({ mensaje: "Error al guardar la ubicacion" });
+    }
+}
+
+const obtenerUbicaciones = async (req, res) => {
+    try{
+        const idCliente =req.user.id;
+        const [result] = await connection.promise().query(
+            "CALL obtenerUbicaciones(?)",[idCliente]);
+        
+            if (!result[0] || result[0].length === 0) {
+                return res.status(404).json({ mensaje: "sin ubicaciones" });
+            }
+            res.status(200).json(result[0]);
+    }catch(error) {
+        console.error("Error al obtener las : ",error);
+        res.status(500).json({ mensaje: "Error al obtener ubicaciones" });
+    }
+}
+
 module.exports = {
     verificarCorreo,
     insertarCliente,
     actualizarCliente,
     eliminarCliente,
     obtenerClientes,
-    obtenerClientePorID
+    obtenerClientePorID,
+    obtenerUbicaciones,
+    guardarUbicacion
 };
 
 //const clientes = [

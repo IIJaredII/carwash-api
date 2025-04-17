@@ -1,8 +1,10 @@
 const connection = require("../config/db");
+const { getIO } = require("../config/socket");
+const firebase = require("../config/firebase");
 
 const insertarRol = async (req,res) => {
     try{
-        const {nombre,descripcion} = req.body;
+        const {nombre,descripcion,token,titulo,mensaje} = req.body;
 
         if(!nombre || !descripcion){
             return res.status(400).json({mensaje: "Todos los campos son obligatorios"});
@@ -21,6 +23,10 @@ const insertarRol = async (req,res) => {
             "CALL insertarRol(?, ?)",
             [nombre,descripcion]
         );
+
+        const io = getIO();
+        io.emit("nuevoRol", { id: results.insertId, nombre, descripcion });
+        firebase.enviarNotificacion(token,titulo,mensaje);
 
         res.status(201).json({
             mensaje: "Rol agregado exitosamente",
@@ -85,6 +91,9 @@ const acualizarRol = async (req,res) => {
         }
 
         await connection.promise().query("CALL actualizarRol(?,?,?)",[id,nombre,descripcion]);
+        const io = getIO();
+        io.emit("rolActualizado", { id, nombre, descripcion });
+
         res.json({mensaje: "Rol actualizado exitosamente"});
     }catch(error){
         console.error("Error al actualizar rol: ",error);
@@ -97,6 +106,8 @@ const eliminarRol = async(req,res) => {
         const {id} = req.params;
 
         await connection.promise().query("CALL eliminarRol(?)",[id]);
+        const io = getIO();
+        io.emit("rolEliminado", { id });
 
         res.json({mensaje: "Rol eliminado correctamente"});
 

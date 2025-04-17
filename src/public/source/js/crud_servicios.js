@@ -1,6 +1,6 @@
 import { verificarAcceso } from "./verificarToken.js";
 let token = "";
-const url = "http://localhost:3000/api/";
+const url = "https://hmqphld5-3000.use2.devtunnels.ms/api/";
 let data = [];
 let categorias =[]; 
 
@@ -196,28 +196,30 @@ const cambiarFormulario = (opc, servicio = {}) => {
 
         document.getElementById("Formulario-editar").addEventListener("submit", async (event) => {
             event.preventDefault();
-            const servicio = document.getElementById("servicio").value;
+        
+            const nombreServicio = document.getElementById("servicio").value;
             const precio = document.getElementById("precio").value;
             const idCategoria = document.getElementById("categoria").value;
-
+        
             const response = await fetch(url + `servicios/${servicio.ID}`, {
                 method: "PUT",
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ servicio, precio, idCategoria })
+                body: JSON.stringify({ servicio: nombreServicio, precio, idCategoria })
             });
-
+        
             if (!response.ok) {
                 console.error("Error al editar el servicio");
                 return;
             }
-
+        
             event.target.reset();
             cambiarFormulario(1);
             obtenerServicios();
         });
+        
     } else if (opc === 3) {
         formulario.innerHTML = `
             <h2>Ver servicio</h2>
